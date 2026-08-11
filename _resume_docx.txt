@@ -1,0 +1,125 @@
+AI Agent 开发方向，有 LangChain / LangGraph 全链路实战经验，主导项目涵盖 RAG 知识库
+检索、LangGraph 多 Agent 工作流编排、SSE 流式推送三个核心技术方向；同时具备 Spring
+Boot 后端 + Vue 前端全栈能力，能独立完成产品级应用从 0 到 1 交付。
+林育丞 | 林育丞
+林育丞 | 林育丞
+邮箱：1378780334@qq.com | 电话：13616913274
+教育经历 | 教育经历 | 教育经历
+阳光学院（本科） | 软件工程 | 2024.9-2026.6
+专业成绩GPA3.39/4（前10%） | 专业成绩GPA3.39/4（前10%） | 专业成绩GPA3.39/4（前10%）
+专业技能 | 专业技能 | 专业技能
+· AI / 大模型：熟练使用 LangChain 构建 RAG 全链路（文档加载 / 语义分片 / 向量检索 / Prompt 编排 / 
+Memory） 
+熟悉 LangGraph StateGraph 状态机编排，掌握 Tool Calling 与结构化输出 
+掌握 ChromaDB / Milvus 向量数据库；具备 SSE / Streaming 流式输出开发经验 
+· 前端开发：了解 React / Vue 3，可完成管理后台页面开发与接口联调，了解组件化开发与状态管理 
+· 后端 / 测试：熟练 Python / FastAPI / uvicorn / asyncio 
+掌握 pytest 接口自动化测试，编写自动化用例覆盖项目核心接口；了解 Java / Spring Boot 
+· 数据库 / 运维：熟练 MySQL 表结构设计与索引优化；熟练 ChromaDB / Milvus 向量检索 
+了解 Docker 容器化部署与 Shell 脚本 | · AI / 大模型：熟练使用 LangChain 构建 RAG 全链路（文档加载 / 语义分片 / 向量检索 / Prompt 编排 / 
+Memory） 
+熟悉 LangGraph StateGraph 状态机编排，掌握 Tool Calling 与结构化输出 
+掌握 ChromaDB / Milvus 向量数据库；具备 SSE / Streaming 流式输出开发经验 
+· 前端开发：了解 React / Vue 3，可完成管理后台页面开发与接口联调，了解组件化开发与状态管理 
+· 后端 / 测试：熟练 Python / FastAPI / uvicorn / asyncio 
+掌握 pytest 接口自动化测试，编写自动化用例覆盖项目核心接口；了解 Java / Spring Boot 
+· 数据库 / 运维：熟练 MySQL 表结构设计与索引优化；熟练 ChromaDB / Milvus 向量检索 
+了解 Docker 容器化部署与 Shell 脚本 | · AI / 大模型：熟练使用 LangChain 构建 RAG 全链路（文档加载 / 语义分片 / 向量检索 / Prompt 编排 / 
+Memory） 
+熟悉 LangGraph StateGraph 状态机编排，掌握 Tool Calling 与结构化输出 
+掌握 ChromaDB / Milvus 向量数据库；具备 SSE / Streaming 流式输出开发经验 
+· 前端开发：了解 React / Vue 3，可完成管理后台页面开发与接口联调，了解组件化开发与状态管理 
+· 后端 / 测试：熟练 Python / FastAPI / uvicorn / asyncio 
+掌握 pytest 接口自动化测试，编写自动化用例覆盖项目核心接口；了解 Java / Spring Boot 
+· 数据库 / 运维：熟练 MySQL 表结构设计与索引优化；熟练 ChromaDB / Milvus 向量检索 
+了解 Docker 容器化部署与 Shell 脚本
+项目经历 | 项目经历 | 项目经历
+AI 个人驾驶舱（多场景 Agent 工具集） 独立开发 2026/04-2026/06 
+从 0 到 1 设计并开发集成智能问答、简历匹配、学习队列的一站式 AI 效率工具，服务 AI 方向求职者替代多个独立 
+工具切换。 
+亮点：从零搭了一套本地知识库 RAG 管道，把原来 Obsidian 里手动翻笔记找答案的流程，变成了 AI 直接检索并 
+给出带来源的回答，问答准确率 85%+，检索响应控制在 3 秒内。 
+自定义 TF-IDF Embeddings 类实现 LangChain Embeddings 接口，集成 Chroma 向量库；接入 SiliconFlow 
+BGE API 实现中文语义检索；自研查询改写策略（LLM 提取核心关键词 + 同义词），结合分数阈值过滤与去重，降 
+低无效召回 
+基于 LCEL（ChatPromptTemplate | get_llm() | StrOutputParser）构建 RAG 问答链；会话 Memory 保留最近 6 
+轮上下文，实现多轮追问与来源溯源；4 套 Prompt 模板覆盖知识问答 / JD 匹配 / 面试题生成 / 打招呼语场景 
+FastAPI 封装 10+ RESTful 接口；JSON 文件持久化 + localStorage 双层存储；Vue 3 + Vite + Pinia 前端， 
+Floral Notepaper 纸质感主题 
+AI 简历优化 Agent 独立开发 2026/05-2026/06 
+从 0 到 1 设计并开发基于 LangGraph 的简历智能优化 Agent，接入简历 + JD，输出多维度匹配分析与 STAR 法 
+则改写稿。 
+亮点：用 LangGraph 搭了一个会自动反思的简历优化 Agent，每次给简历和 JD，它自己算初始匹配度、判断哪 
+里要改、写新版本、再评估，循环几轮直到达标才停。用户不用来回手动改，AI 自己把简历往 JD 上靠，单次优化 
+能省下约 30 分钟反复调整的时间。 
+基于 TypedDict 定义 OptimizationState，封装 JD 解析 / 简历评估 / STAR 改写 / 匹配度计算 4 个 Tool，通过 
+StateGraph 实现类型安全的节点路由与状态流转 
+Self-Reflection 迭代机制：Agent 自主判断是否继续，最多 5 轮，达标即停；asyncio.Queue + 
+StreamingResponse SSE 实时推送，4 阶段进度条可视化 
+5 维度评估：综合评分 / 技能匹配 / 经验匹配 / 差距分析 / 关键词补充；支持 Markdown 导出 
+智能竞品分析 Agent 独立开发 2026/07 
+亮点：设计了一个 5 节点多 Agent 流水线（Search → Crawl → Extract → Analyze → Report），并行爬取多个 
+竞品并流式输出报告，多竞品分析耗时降低 60%+。 
+基于 StateGraph 定义 5 节点流水线，TypedDict 类型安全 state 共享；ThreadPoolExecutor 并行爬取， 
+asyncio.run_in_executor 非阻塞 LLM 调用 
+多数据源降级策略：Tavily → LLM 生成，Firecrawl → LLM 兜底；报告内容 100 字符/块 + 50ms 延迟模拟打字机 
+效果，支持 Markdown 导出 | AI 个人驾驶舱（多场景 Agent 工具集） 独立开发 2026/04-2026/06 
+从 0 到 1 设计并开发集成智能问答、简历匹配、学习队列的一站式 AI 效率工具，服务 AI 方向求职者替代多个独立 
+工具切换。 
+亮点：从零搭了一套本地知识库 RAG 管道，把原来 Obsidian 里手动翻笔记找答案的流程，变成了 AI 直接检索并 
+给出带来源的回答，问答准确率 85%+，检索响应控制在 3 秒内。 
+自定义 TF-IDF Embeddings 类实现 LangChain Embeddings 接口，集成 Chroma 向量库；接入 SiliconFlow 
+BGE API 实现中文语义检索；自研查询改写策略（LLM 提取核心关键词 + 同义词），结合分数阈值过滤与去重，降 
+低无效召回 
+基于 LCEL（ChatPromptTemplate | get_llm() | StrOutputParser）构建 RAG 问答链；会话 Memory 保留最近 6 
+轮上下文，实现多轮追问与来源溯源；4 套 Prompt 模板覆盖知识问答 / JD 匹配 / 面试题生成 / 打招呼语场景 
+FastAPI 封装 10+ RESTful 接口；JSON 文件持久化 + localStorage 双层存储；Vue 3 + Vite + Pinia 前端， 
+Floral Notepaper 纸质感主题 
+AI 简历优化 Agent 独立开发 2026/05-2026/06 
+从 0 到 1 设计并开发基于 LangGraph 的简历智能优化 Agent，接入简历 + JD，输出多维度匹配分析与 STAR 法 
+则改写稿。 
+亮点：用 LangGraph 搭了一个会自动反思的简历优化 Agent，每次给简历和 JD，它自己算初始匹配度、判断哪 
+里要改、写新版本、再评估，循环几轮直到达标才停。用户不用来回手动改，AI 自己把简历往 JD 上靠，单次优化 
+能省下约 30 分钟反复调整的时间。 
+基于 TypedDict 定义 OptimizationState，封装 JD 解析 / 简历评估 / STAR 改写 / 匹配度计算 4 个 Tool，通过 
+StateGraph 实现类型安全的节点路由与状态流转 
+Self-Reflection 迭代机制：Agent 自主判断是否继续，最多 5 轮，达标即停；asyncio.Queue + 
+StreamingResponse SSE 实时推送，4 阶段进度条可视化 
+5 维度评估：综合评分 / 技能匹配 / 经验匹配 / 差距分析 / 关键词补充；支持 Markdown 导出 
+智能竞品分析 Agent 独立开发 2026/07 
+亮点：设计了一个 5 节点多 Agent 流水线（Search → Crawl → Extract → Analyze → Report），并行爬取多个 
+竞品并流式输出报告，多竞品分析耗时降低 60%+。 
+基于 StateGraph 定义 5 节点流水线，TypedDict 类型安全 state 共享；ThreadPoolExecutor 并行爬取， 
+asyncio.run_in_executor 非阻塞 LLM 调用 
+多数据源降级策略：Tavily → LLM 生成，Firecrawl → LLM 兜底；报告内容 100 字符/块 + 50ms 延迟模拟打字机 
+效果，支持 Markdown 导出 | AI 个人驾驶舱（多场景 Agent 工具集） 独立开发 2026/04-2026/06 
+从 0 到 1 设计并开发集成智能问答、简历匹配、学习队列的一站式 AI 效率工具，服务 AI 方向求职者替代多个独立 
+工具切换。 
+亮点：从零搭了一套本地知识库 RAG 管道，把原来 Obsidian 里手动翻笔记找答案的流程，变成了 AI 直接检索并 
+给出带来源的回答，问答准确率 85%+，检索响应控制在 3 秒内。 
+自定义 TF-IDF Embeddings 类实现 LangChain Embeddings 接口，集成 Chroma 向量库；接入 SiliconFlow 
+BGE API 实现中文语义检索；自研查询改写策略（LLM 提取核心关键词 + 同义词），结合分数阈值过滤与去重，降 
+低无效召回 
+基于 LCEL（ChatPromptTemplate | get_llm() | StrOutputParser）构建 RAG 问答链；会话 Memory 保留最近 6 
+轮上下文，实现多轮追问与来源溯源；4 套 Prompt 模板覆盖知识问答 / JD 匹配 / 面试题生成 / 打招呼语场景 
+FastAPI 封装 10+ RESTful 接口；JSON 文件持久化 + localStorage 双层存储；Vue 3 + Vite + Pinia 前端， 
+Floral Notepaper 纸质感主题 
+AI 简历优化 Agent 独立开发 2026/05-2026/06 
+从 0 到 1 设计并开发基于 LangGraph 的简历智能优化 Agent，接入简历 + JD，输出多维度匹配分析与 STAR 法 
+则改写稿。 
+亮点：用 LangGraph 搭了一个会自动反思的简历优化 Agent，每次给简历和 JD，它自己算初始匹配度、判断哪 
+里要改、写新版本、再评估，循环几轮直到达标才停。用户不用来回手动改，AI 自己把简历往 JD 上靠，单次优化 
+能省下约 30 分钟反复调整的时间。 
+基于 TypedDict 定义 OptimizationState，封装 JD 解析 / 简历评估 / STAR 改写 / 匹配度计算 4 个 Tool，通过 
+StateGraph 实现类型安全的节点路由与状态流转 
+Self-Reflection 迭代机制：Agent 自主判断是否继续，最多 5 轮，达标即停；asyncio.Queue + 
+StreamingResponse SSE 实时推送，4 阶段进度条可视化 
+5 维度评估：综合评分 / 技能匹配 / 经验匹配 / 差距分析 / 关键词补充；支持 Markdown 导出 
+智能竞品分析 Agent 独立开发 2026/07 
+亮点：设计了一个 5 节点多 Agent 流水线（Search → Crawl → Extract → Analyze → Report），并行爬取多个 
+竞品并流式输出报告，多竞品分析耗时降低 60%+。 
+基于 StateGraph 定义 5 节点流水线，TypedDict 类型安全 state 共享；ThreadPoolExecutor 并行爬取， 
+asyncio.run_in_executor 非阻塞 LLM 调用 
+多数据源降级策略：Tavily → LLM 生成，Firecrawl → LLM 兜底；报告内容 100 字符/块 + 50ms 延迟模拟打字机 
+效果，支持 Markdown 导出
+个人总结 | 个人总结 | 个人总结

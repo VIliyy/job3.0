@@ -1,0 +1,248 @@
+/* ========================================
+ * Job3.0 Base Styles - v2.0
+ * 基于 taste-skill minimalist-ui 规范
+ * ======================================== */
+
+/* === Global Reset & Box Sizing === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* === Root Element === */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  background-color: var(--surface-canvas);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* === Typography === */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: var(--font-size-display-xl);
+  letter-spacing: var(--letter-spacing-display-xl);
+}
+
+h2 {
+  font-size: var(--font-size-display-lg);
+  letter-spacing: var(--letter-spacing-display-lg);
+}
+
+h3 {
+  font-size: var(--font-size-display-md);
+  letter-spacing: var(--letter-spacing-display-md);
+}
+
+h4 {
+  font-size: var(--font-size-heading-lg);
+}
+
+h5 {
+  font-size: var(--font-size-heading-md);
+}
+
+h6 {
+  font-size: var(--font-size-body);
+}
+
+p {
+  line-height: var(--line-height-relaxed);
+  color: var(--text-body);
+}
+
+small {
+  font-size: var(--font-size-body-sm);
+}
+
+strong, b {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* === Links === */
+a {
+  color: var(--color-action-blue);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out-quart);
+}
+
+a:hover {
+  text-decoration: underline;
+  color: var(--color-focus-blue);
+}
+
+/* === Lists === */
+ul, ol {
+  padding-left: var(--spacing-lg);
+}
+
+li {
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* === Images === */
+img, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* === Form Elements === */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none;
+}
+
+/* === Code === */
+code, pre, kbd {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-body-sm);
+}
+
+code {
+  background: var(--surface-stone);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+}
+
+pre {
+  background: var(--color-dark-navy);
+  color: var(--text-on-dark);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+kbd {
+  background: var(--surface-stone);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  font-size: var(--font-size-micro);
+}
+
+/* === Tables === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+
+th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  font-size: var(--font-size-body-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === Horizontal Rule === */
+hr {
+  border: none;
+  border-top: 1px solid var(--border-default);
+  margin: var(--spacing-lg) 0;
+}
+
+/* === Selection === */
+::selection {
+  background-color: rgba(76, 110, 230, 0.2);
+  color: var(--text-primary);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-stone);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* === Focus Visible === */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* === Disabled State === */
+[disabled],
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* === Text Utilities === */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-body { color: var(--text-body); }
+.text-muted { color: var(--text-muted); }
+
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-error { color: var(--color-error); }
+
+/* === Background Utilities === */
+.bg-canvas { background-color: var(--surface-canvas); }
+.bg-stone { background-color: var(--surface-stone); }
+.bg-elevated { background-color: var(--surface-elevated); }
+
+/* === Layout Utilities === */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.container-sm {
+  max-width: var(--container-sm);
+}
