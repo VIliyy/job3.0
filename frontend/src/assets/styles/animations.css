@@ -1,0 +1,365 @@
+/* ========================================
+ * Job3.0 Animations System - v2.0
+ * 基于 taste-skill minimalist-ui 规范
+ * ======================================== */
+
+/* === Keyframe Animations === */
+
+/* Fade animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Slide animations */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale animations */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Spin (loading) */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* Breathe (gentle pulse) */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+/* Shimmer (loading skeleton) */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Shake (error feedback) */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* Bounce (success feedback) */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Gradient shift (agent processing) */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glow pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 12px currentColor, 0 0 20px currentColor;
+  }
+}
+
+/* === Animation Utility Classes === */
+
+/* Fade */
+.anim-fade-in {
+  animation: fade-in var(--duration-base) var(--ease-out-quart) both;
+}
+
+.anim-fade-out {
+  animation: fade-out var(--duration-fast) var(--ease-out-quart) both;
+}
+
+/* Slide */
+.anim-slide-up {
+  animation: slide-up var(--duration-base) var(--ease-out-quart) both;
+}
+
+.anim-slide-down {
+  animation: slide-down var(--duration-base) var(--ease-out-quart) both;
+}
+
+.anim-slide-in-right {
+  animation: slide-in-right var(--duration-base) var(--ease-out-quart) both;
+}
+
+.anim-slide-in-left {
+  animation: slide-in-left var(--duration-base) var(--ease-out-quart) both;
+}
+
+/* Scale */
+.anim-scale-in {
+  animation: scale-in var(--duration-base) var(--ease-spring) both;
+}
+
+.anim-scale-out {
+  animation: scale-out var(--duration-fast) var(--ease-out-quart) both;
+}
+
+/* Spin */
+.anim-spin {
+  animation: spin 1s linear infinite;
+}
+
+.anim-spin-fast {
+  animation: spin 0.6s linear infinite;
+}
+
+/* Pulse */
+.anim-pulse {
+  animation: pulse 2s var(--ease-in-out-quart) infinite;
+}
+
+.anim-breathe {
+  animation: breathe 3s var(--ease-in-out-quart) infinite;
+}
+
+/* === Stagger Animations === */
+
+/* Stagger children with slide-up */
+.stagger > * {
+  animation: slide-up var(--duration-base) var(--ease-out-quart) both;
+}
+
+.stagger > *:nth-child(1) { animation-delay: var(--stagger-1); }
+.stagger > *:nth-child(2) { animation-delay: var(--stagger-2); }
+.stagger > *:nth-child(3) { animation-delay: var(--stagger-3); }
+.stagger > *:nth-child(4) { animation-delay: var(--stagger-4); }
+.stagger > *:nth-child(5) { animation-delay: var(--stagger-5); }
+.stagger > *:nth-child(6) { animation-delay: calc(var(--stagger-5) * 1.5); }
+.stagger > *:nth-child(7) { animation-delay: calc(var(--stagger-5) * 2); }
+.stagger > *:nth-child(8) { animation-delay: calc(var(--stagger-5) * 2.5); }
+
+/* Stagger with fade-in */
+.stagger-fade > * {
+  animation: fade-in var(--duration-base) var(--ease-out-quart) both;
+}
+
+.stagger-fade > *:nth-child(1) { animation-delay: var(--stagger-1); }
+.stagger-fade > *:nth-child(2) { animation-delay: var(--stagger-2); }
+.stagger-fade > *:nth-child(3) { animation-delay: var(--stagger-3); }
+.stagger-fade > *:nth-child(4) { animation-delay: var(--stagger-4); }
+.stagger-fade > *:nth-child(5) { animation-delay: var(--stagger-5); }
+
+/* === Skeleton Loading === */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-stone) 0%,
+    var(--surface-stone-strong) 50%,
+    var(--surface-stone) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s var(--ease-in-out-quart) infinite;
+  border-radius: var(--radius-xs);
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+.skeleton-heading {
+  height: 24px;
+  width: 40%;
+  margin-bottom: var(--spacing-md);
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-card {
+  height: 120px;
+  border-radius: var(--radius-lg);
+}
+
+/* === Page Transitions === */
+
+.page-enter-active {
+  animation: slide-up var(--duration-page) var(--ease-out-quart);
+}
+
+.page-leave-active {
+  animation: fade-out var(--duration-fast) var(--ease-out-quart);
+}
+
+/* === Hover Interactions === */
+
+/* Lift effect */
+.hover-lift {
+  transition:
+    transform var(--duration-fast) var(--ease-out-quart),
+    box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-level-3);
+}
+
+/* Scale effect */
+.hover-scale {
+  transition: transform var(--duration-fast) var(--ease-spring-soft);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Glow effect */
+.hover-glow {
+  transition:
+    box-shadow var(--duration-fast) var(--ease-out-quart),
+    border-color var(--duration-fast) var(--ease-out-quart);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow-blue);
+  border-color: var(--color-focus-blue);
+}
+
+/* === Reduced Motion === */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .stagger > *,
+  .stagger-fade > * {
+    animation-delay: 0ms !important;
+  }
+}
+
+/* === CSS Custom Properties for Motion === */
+
+/* Use these in components for consistent motion */
+:root {
+  /* Common animation configs */
+  --motion-fast: var(--duration-fast) var(--ease-out-quart);
+  --motion-base: var(--duration-base) var(--ease-out-quart);
+  --motion-slow: var(--duration-slow) var(--ease-out-quart);
+  --motion-spring: var(--duration-base) var(--ease-spring);
+  --motion-bounce: var(--duration-slow) var(--ease-spring);
+}

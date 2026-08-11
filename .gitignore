@@ -1,0 +1,14 @@
+﻿# Sensitive data backups
+sensitive_backup_*/
+SENSITIVE_BACKUP.md
+*_backup*
+*.bak
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
