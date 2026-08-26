@@ -159,3 +159,19 @@ export const exportApi = {
     window.URL.revokeObjectURL(url)
   }
 }
+
+
+// ============ Video Notes API（视频笔记） ============
+export const videoApi = {
+  generate: (data) => apiClient.post('/video-notes/generate', data),
+  listTasks: (limit = 50) => apiClient.get('/video-notes/tasks', { params: { limit } }),
+  getTask: (taskId) => apiClient.get('/video-notes/tasks/' + taskId),
+  uploadLocal: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.post('/video-notes/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  getConfig: () => apiClient.get('/video-notes/config'),
+  saveConfig: (data) => apiClient.post('/video-notes/config', data),
+  exportObsidian: (taskId) => apiClient.post('/video-notes/tasks/' + taskId + '/export-obsidian')
+}

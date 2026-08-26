@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHistory } from "vue-router"
 
 const routes = [
   {
@@ -6,6 +6,12 @@ const routes = [
     name: "Dashboard",
     component: () => import("../views/Dashboard.vue"),
     meta: { title: "控制台" }
+  },
+  {
+    path: "/video-notes",
+    name: "VideoNotes",
+    component: () => import("../views/VideoNotes.vue"),
+    meta: { title: "视频笔记" }
   },
   {
     path: "/agent",
@@ -50,7 +56,7 @@ const router = createRouter({
 
 // 路由重定向（注册在路由表中，这里只处理页面标题）
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title ? to.meta.title + " - Job3.0" : "Job3.0"
+  document.title = to.meta.title ? to.meta.title + " - 小林工具箱" : "小林工具箱"
   next()
 })
 

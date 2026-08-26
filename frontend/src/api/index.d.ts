@@ -82,3 +82,27 @@ export const settingsApi: {
   setAPIKey: (provider: string, apiKey: string, model: string) => Promise<any>
   setDeepSeekKey: (apiKey: string, model?: string) => Promise<any>
 }
+
+export const videoApi: {
+  generate: (data: {
+    video_url: string
+    platform?: string
+    style?: string
+    formats?: string[]
+    extras?: string | null
+    export_obsidian?: boolean
+  }) => Promise<any>
+  listTasks: (limit?: number) => Promise<any[]>
+  getTask: (taskId: string) => Promise<any>
+  uploadLocal: (file: File) => Promise<{ path: string; url: string }>
+  getConfig: () => Promise<{
+    obsidian_vault_path?: string
+    obsidian_valid?: boolean
+    obsidian_message?: string
+    llm_configured?: boolean
+    llm_provider?: string
+    whisper_model?: string
+  }>
+  saveConfig: (data: { obsidian_vault_path: string }) => Promise<any>
+  exportObsidian: (taskId: string) => Promise<{ ok: boolean; path: string }>
+}

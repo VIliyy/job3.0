@@ -1,7 +1,7 @@
-﻿<template>
+<template>
   <div class="settings-page">
     <h1>Settings</h1>
-    <p>Configure AI API Key</p>
+    <p>Configure AI API Key &amp; 工具箱设置</p>
     
     <div class="section">
       <h2>AI Settings</h2>
@@ -15,6 +15,18 @@
       </div>
       
       <button @click="saveAPIKey" class="btn-save">Save</button>
+    </div>
+
+    <div class="section">
+      <h2>Obsidian 知识库（视频笔记导出）</h2>
+      <div class="form-group">
+        <label>Vault 根目录路径</label>
+        <input v-model="obsidianPath" class="input" placeholder="C:\Users\xxx\Documents\MyVault" />
+      </div>
+      <div class="status-card" :class="obsidianValid ? 'status-ok' : 'status-warn'">
+        <span>{{ obsidianStatus }}</span>
+      </div>
+      <button @click="saveObsidian" class="btn-save">保存 Obsidian 配置</button>
     </div>
     
     <div class="section">
@@ -34,6 +46,9 @@ const saving = ref(false)
 const message = ref("")
 const messageType = ref("success")
 const aiEnabled = ref(false)
+const obsidianPath = ref("")
+const obsidianValid = ref(false)
+const obsidianStatus = ref("未配置")
 
 const statusText = computed(() => aiEnabled.value ? "[OK] AI 已启用" : "[X] 未配置 API Key")
 
@@ -42,6 +57,15 @@ onMounted(async () => {
     const { settingsApi } = await import("@/api")
     const status = await settingsApi.getAIStatus()
     aiEnabled.value = status.ai_enabled || false
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    const { videoApi } = await import("@/api")
+    const cfg = await videoApi.getConfig()
+    obsidianPath.value = cfg.obsidian_vault_path || ""
+    obsidianValid.value = !!cfg.obsidian_valid
+    obsidianStatus.value = cfg.obsidian_valid ? "[OK] Obsidian 库已连接" : "[X] " + (cfg.obsidian_message || "未配置路径")
   } catch (e) {
     console.error(e)
   }
@@ -69,6 +93,19 @@ const saveAPIKey = async () => {
   }
 }
 
+const saveObsidian = async () => {
+  try {
+    const { videoApi } = await import("@/api")
+    await videoApi.saveConfig({ obsidian_vault_path: obsidianPath.value })
+    const cfg = await videoApi.getConfig()
+    obsidianValid.value = !!cfg.obsidian_valid
+    obsidianStatus.value = cfg.obsidian_valid ? "[OK] Obsidian 库已连接" : "[X] " + (cfg.obsidian_message || "路径无效")
+    showMsg("Obsidian 配置已保存")
+  } catch (err: any) {
+    showMsg(err.message || "保存失败", "error")
+  }
+}
+
 const clearData = () => {
   if (confirm("Clear all data?")) {
     localStorage.clear()
@@ -77,8 +114,6 @@ const clearData = () => {
 }
 </script>
 
-
-
 <style scoped>
 .settings-page { max-width: 800px; margin: 0 auto; padding: 24px;
   background: var(--surface-default); }
@@ -86,6 +121,8 @@ h1 { font-size: 36px; margin: 0 0 8px 0; }
 .section { background: var(--color-canvas); border: 1px solid var(--color-border-light); border-radius: 22px; padding: 24px; margin-bottom: 24px; }
 .section h2 { font-size: 18px; margin: 0 0 20px 0; }
 .status-card { padding: 16px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; margin-bottom: 20px; }
+.status-ok { background: rgba(34, 197, 94, 0.1) !important; }
+.status-warn { background: rgba(245, 158, 11, 0.1) !important; }
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
 .input { width: 100%; padding: 12px 16px; border: 1px solid var(--color-border-light); border-radius: 8px; font-size: 14px; }
@@ -98,17 +135,4 @@ textarea { background: var(--surface-input); color: var(--text-primary); border:
 
 /* === Dark Mode Optimizations === */
 :root.dark .settings-page { background: var(--color-background); }
-:root.dark h1 { color: #f4f4f5; }
-:root.dark p { color: #a1a1aa; }
-:root.dark .section { background: #242429; border-color: #3f3f46; }
-:root.dark .section h2 { color: #e4e4e7; }
-:root.dark .status-card { background: rgba(245, 158, 11, 0.15); }
-:root.dark .form-group label { color: #e4e4e7; }
-:root.dark .input { background: #2a2a30; border-color: #3f3f46; color: #f4f4f5; }
-:root.dark .input::placeholder { color: #71717a; }
-:root.dark .btn-save { background: #4c6ee6; }
-:root.dark .btn-save:hover { background: #5c7cfa; }
-:root.dark .btn-clear { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.5); }
-:root.dark .btn-clear:hover { background: rgba(239, 68, 68, 0.25); }
-:root.dark textarea { background: #2a2a30; border-color: #3f3f46; color: #f4f4f5; }
 </style>

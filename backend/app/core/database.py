@@ -1,5 +1,5 @@
-﻿# -*- coding: utf-8 -*-
-# Job3.0 求职系统 - 数据库配置
+# -*- coding: utf-8 -*-
+# 小林工具箱 - 数据库配置
 # 支持SQLite（本地）和MySQL（可选）
 
 from sqlalchemy import create_engine
@@ -35,14 +35,15 @@ def get_db():
         db.close()
 
 def init_db():
-    # v2.0: 导入所有模型
+    # 导入所有模型
     from app.models import (
-        resume, 
-        application, 
-        greeting, 
-        jd
+        resume,
+        application,
+        greeting,
+        jd,
+        video_task,
     )
-    
+
     Base.metadata.create_all(bind=engine)
 
     # 轻量迁移：ResumeVersion.original_content（幂等，SQLite 专用）

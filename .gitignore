@@ -1,14 +1,52 @@
-﻿# Sensitive data backups
-sensitive_backup_*/
-SENSITIVE_BACKUP.md
-*_backup*
-*.bak
+# ============ 环境与密钥（禁止提交） ============
+.env
+.env.*
+!.env.example
+!.env.example.*
+*.pem
+*.key
+*.p12
+*.pfx
 
-# IDE
+# ============ 个人隐私文件（简历含联系方式，不推送） ============
+_create_resume.py
+新简历_*.md
+新简历_*.docx
+
+# ============ 运行时数据 / 缓存 ============
+backend/data/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# ============ Python ============
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ============ Node ============
+node_modules/
+dist/
+.vite/
+*.local
+
+# ============ IDE / 系统 ============
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
 
-# Temporary files
+# ============ 临时文件 ============
 *.tmp
 *.temp
+*.bak
+*_backup*
+sensitive_backup_*/
+SENSITIVE_BACKUP.md

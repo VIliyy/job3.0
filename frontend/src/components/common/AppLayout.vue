@@ -1,9 +1,9 @@
-﻿<template>
+<template>
   <div class="app-layout" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
-          <span class="logo-text">Job3.0</span>
+          <span class="logo-text">小林工具箱</span>
         </div>
         <button @click="sidebarCollapsed = !sidebarCollapsed" class="collapse-btn">
           <span v-if="sidebarCollapsed">+</span>
@@ -51,6 +51,7 @@ const isDark = ref(false)
 
 const navItems = [
   { path: '/', label: '控制台', icon: 'dashboard' },
+  { path: '/video-notes', label: '视频笔记', icon: 'video' },
   { path: '/optimize', label: '简历优化', icon: 'optimize' },
   { path: '/resumes', label: '简历管理', icon: 'resume' },
   { path: '/agent', label: '求职助手', icon: 'assistant' },
@@ -407,3 +408,5 @@ onMounted(() => {
   }
 }
 </style>
+
+

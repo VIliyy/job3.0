@@ -32,3 +32,8 @@ api_router.include_router(ai.router, prefix="/ai", tags=["AI??"])
 api_router.include_router(stream.router, prefix="/stream", tags=["????"])
 api_router.include_router(match.router, prefix="/match", tags=["????"])
 api_router.include_router(orchestration.router, prefix="/orchestration", tags=["?Agent??"])
+
+
+# 视频笔记模块（小林工具箱）
+from app.api.video_notes import router as video_notes_router
+api_router.include_router(video_notes_router)

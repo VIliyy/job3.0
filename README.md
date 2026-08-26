@@ -1,4 +1,4 @@
-﻿# Job3.0 - 智能简历优化平台
+# 小林工具箱 - 多功能工具箱
 
 基于多Agent协作系统的智能简历优化平台，支持简历管理、JD分析、投递记录等功能。
 
@@ -152,3 +152,33 @@ pytest tests/ --cov=app --cov-report=html
 ## License
 
 MIT License
+
+
+---
+
+## 🎬 视频笔记模块（v2.0 新增）
+
+把 B站 / 抖音链接或本地音视频自动转成精炼 Markdown 笔记，支持一键导出到本地 Obsidian 知识库。
+
+### 使用流程
+1. 侧边栏进入 **视频笔记**
+2. 粘贴 B站/抖音链接，或选择本地音视频文件
+3. 选择笔记风格（精简/详细/教程/会议纪要等）与附加格式（目录/原片跳转/AI总结）
+4. 勾选「导出到 Obsidian」可自动把笔记写入知识库（需先在设置页配置 Vault 路径）
+5. 后台流水线：**下载（yt-dlp）→ 转写（faster-whisper）→ AI 总结（LLM）→ 导出**
+
+### 环境要求
+- **FFmpeg**：必须安装并加入 PATH（用于抽音频）
+- **LLM API Key**：在 `backend/.env` 配置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`
+- **Whisper 模型**：首次转写时自动下载（约 75MB，tiny），国内网络建议设置镜像：
+  ```powershell
+  $env:HF_ENDPOINT = "https://hf-mirror.com"
+  $env:HF_HUB_DISABLE_XET = "1"
+  ```
+  模型默认缓存在 `backend/data/video_notes/models/`
+
+### 技术说明
+- 前端：`frontend/src/views/VideoNotes.vue`（新增路由 `/video-notes`）
+- 后端：`backend/app/services/video/`（下载/转写/总结/Obsidian 导出）
+- 数据表：`video_tasks`（SQLite 自动创建）
+- 状态流转：PENDING → PARSING → DOWNLOADING → TRANSCRIBING → SUMMARIZING → OBSIDIAN → SUCCESS/FAILED

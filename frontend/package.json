@@ -1,7 +1,7 @@
 {
-  "name": "job3-frontend",
+  "name": "xiaolin-toolbox-frontend",
   "version": "1.0.0",
-  "description": "Job3.0 - Resume Management System",
+  "description": "小林工具箱 - 多功能工具箱前端（简历优化 / 视频笔记）",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -36,3 +36,4 @@
     "vue-tsc": "^3.3.9"
   }
 }
+
