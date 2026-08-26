@@ -1,16 +1,23 @@
-# 小林工具箱 - 多功能工具箱
+# 小林工具箱 - 多功能 AI 工具箱
 
-基于多Agent协作系统的智能简历优化平台，支持简历管理、JD分析、投递记录等功能。
+基于多 Agent 协作系统的一站式 AI 效率工具箱（原 Job3.0），把简历优化、求职助手、知识问答、视频笔记整合到同一个工具里，替代多个独立工具的来回切换。
 
 ## 功能特性
 
-- 📄 **简历管理** - 多版本简历管理，快速切换
-- 🔍 **JD分析** - 智能解析职位描述，提取关键信息
-- 🤖 **AI优化** - 多Agent协作，自动优化简历
-- 📊 **匹配分析** - 简历与JD智能匹配度分析
-- 📋 **投递管理** - 记录求职进度，不错过机会
-- 💬 **智能助手** - AI对话，随时解答求职问题
-- 持续更新多功能
+- 🎬 **视频笔记（v2.0 新增）** - 粘贴 B站/抖音链接或选择本地音视频，自动完成 下载 → 转写 → AI 总结 → 导出 Obsidian 的完整流水线
+- 🤖 **求职助手** - 多场景 Agent 工具集：知识问答 / JD 匹配 / 面试题生成 / 打招呼语，带来源溯源的 RAG 问答
+- 📊 **AI 简历优化** - LangGraph 多 Agent 自动反思优化：输入简历 + JD，输出多维度匹配分析与 STAR 法则改写稿
+- 📄 **简历管理** - 多版本简历管理，快速切换与投递记录跟踪
+- ⚙️ **设置中心** - 配置 Obsidian Vault 路径、模型参数、Whisper 转写参数
+- 🔧 **持续更新** - 更多功能陆续加入
+
+## 界面预览
+
+| 控制台 | 视频笔记 |
+| :---: | :---: |
+| ![控制台](docs/screenshots/dashboard.png) | ![视频笔记](docs/screenshots/video-notes.png) |
+| AI 简历优化 | 求职助手 |
+| ![简历优化](docs/screenshots/optimize.png) | ![求职助手](docs/screenshots/agent.png) |
 
 ## 技术栈
 
@@ -23,8 +30,13 @@
 ### 后端
 - FastAPI
 - SQLAlchemy
-- LangGraph (多Agent框架)
+- LangGraph / LangChain (多Agent框架)
 - DeepSeek / OpenAI API
+
+### 视频笔记
+- yt-dlp (音视频下载)
+- faster-whisper (本地语音转写)
+- FFmpeg (音频抽取)
 
 ### 部署
 - Docker & Docker Compose
@@ -35,14 +47,15 @@
 
 ### 1. 克隆项目
 ```bash
-git clone https://github.com/your-username/job3.0.git
+git clone https://github.com/VIliyy/job3.0.git
 cd job3.0
 ```
 
 ### 2. 配置环境变量
 ```bash
+cd backend
 cp .env.example .env
-# 编辑 .env 填写 API Key
+# 编辑 .env 填写 API Key（DeepSeek / OpenAI 至少配置一个）
 ```
 
 ### 3. 启动开发服务
@@ -61,7 +74,15 @@ npm install
 npm run dev
 ```
 
-### 4. Docker部署 (生产环境)
+### 4. 视频笔记前置依赖
+- **FFmpeg**：必须安装并加入 PATH（用于抽取音频）
+- **Whisper 模型**：首次转写时自动下载（默认 tiny，约 75MB），国内网络可设置镜像：
+  ```powershell
+  $env:HF_ENDPOINT = "https://hf-mirror.com"
+  $env:HF_HUB_DISABLE_XET = "1"
+  ```
+
+### 5. Docker部署 (生产环境)
 ```bash
 docker-compose up -d
 ```
@@ -73,22 +94,24 @@ job3.0/
 ├── frontend/           # 前端项目
 │   ├── src/
 │   │   ├── components/  # Vue组件
-│   │   ├── views/       # 页面视图
+│   │   ├── views/       # 页面视图（控制台 / 视频笔记 / 求职助手 / 简历优化 / 简历管理 / 设置）
 │   │   ├── stores/      # Pinia状态
 │   │   ├── api/         # API封装
-│   │   └── types/       # TypeScript类型
+│   │   └── router/      # 路由
 │   └── ...
 │
 ├── backend/            # 后端项目
 │   ├── app/
-│   │   ├── api/        # API路由
+│   │   ├── api/        # API路由（含 video_notes.py）
 │   │   ├── core/       # 核心配置
-│   │   ├── models/     # 数据库模型
+│   │   ├── models/     # 数据库模型（含 video_task.py）
 │   │   ├── schemas/    # Pydantic模型
 │   │   ├── services/   # 业务逻辑
-│   │   └── agents/     # AI Agent
+│   │   │   └── video/  # 视频笔记流水线（下载/转写/总结/Obsidian导出）
+│   │   └── agents/     # AI Agent（LangGraph / LangChain）
 │   └── tests/          # 测试文件
 │
+├── docs/screenshots/   # 界面截图
 ├── docker-compose.yml  # Docker编排
 ├── nginx.conf          # Nginx配置
 ├── Dockerfile          # 后端镜像
@@ -139,25 +162,15 @@ pytest tests/ --cov=app --cov-report=html
 |--------|------|------|
 | DEEPSEEK_API_KEY | DeepSeek API Key | 是 |
 | OPENAI_API_KEY | OpenAI API Key | 否 |
+| OLLAMA_BASE_URL | Ollama 本地模型地址 | 否 |
+| OLLAMA_MODEL | Ollama 本地模型名 | 否 |
+| LLM_API_KEY / LLM_BASE_URL / LLM_MODEL | 视频笔记专用 LLM（不配置则按 OPENAI > DeepSeek > Ollama 优先级） | 否 |
+| WHISPER_MODEL_SIZE | Whisper 模型大小（tiny/base/small/medium/large-v3） | 否 |
+| WHISPER_DEVICE | 转写设备（auto/cpu/cuda） | 否 |
 | DATABASE_URL | 数据库连接URL | 否 |
 | SECRET_KEY | JWT密钥 | 生产必填 |
 
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m '\''Add some amazing feature'\'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
-
-## License
-
-MIT License
-
-
----
-
-## 🎬 视频笔记模块（v2.0 新增）
+## 视频笔记模块
 
 把 B站 / 抖音链接或本地音视频自动转成精炼 Markdown 笔记，支持一键导出到本地 Obsidian 知识库。
 
@@ -168,18 +181,21 @@ MIT License
 4. 勾选「导出到 Obsidian」可自动把笔记写入知识库（需先在设置页配置 Vault 路径）
 5. 后台流水线：**下载（yt-dlp）→ 转写（faster-whisper）→ AI 总结（LLM）→ 导出**
 
-### 环境要求
-- **FFmpeg**：必须安装并加入 PATH（用于抽音频）
-- **LLM API Key**：在 `backend/.env` 配置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`
-- **Whisper 模型**：首次转写时自动下载（约 75MB，tiny），国内网络建议设置镜像：
-  ```powershell
-  $env:HF_ENDPOINT = "https://hf-mirror.com"
-  $env:HF_HUB_DISABLE_XET = "1"
-  ```
-  模型默认缓存在 `backend/data/video_notes/models/`
-
 ### 技术说明
-- 前端：`frontend/src/views/VideoNotes.vue`（新增路由 `/video-notes`）
+- 前端：`frontend/src/views/VideoNotes.vue`（路由 `/video-notes`）
 - 后端：`backend/app/services/video/`（下载/转写/总结/Obsidian 导出）
 - 数据表：`video_tasks`（SQLite 自动创建）
 - 状态流转：PENDING → PARSING → DOWNLOADING → TRANSCRIBING → SUMMARIZING → OBSIDIAN → SUCCESS/FAILED
+
+## 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m "Add some amazing feature"`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+## License
+
+MIT License
+
