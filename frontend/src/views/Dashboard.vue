@@ -14,6 +14,17 @@
       </div>
     </header>
 
+    <section class="next-step-panel" aria-labelledby="next-step-title">
+      <div class="next-step-copy">
+        <span class="eyebrow">JOB3.0 / WORKSPACE</span>
+        <h2 id="next-step-title">今天，从一个小动作开始</h2>
+        <p>优先处理最影响求职结果的事情，保持节奏比一次做完所有事情更重要。</p>
+      </div>
+      <button class="btn-primary next-step-action" @click="$router.push('/optimize')">
+        优化一份简历
+      </button>
+    </section>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">简历数量</div>
@@ -326,20 +337,59 @@ const getStatusText = (status) => {
 .dashboard {
   background: var(--surface-default);
   min-height: 100vh;
-  padding: 24px;
   padding: 32px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
 .dashboard-header {
-  background: var(--surface-elevated);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--border-default);
+}
+
+.next-step-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding: 24px 28px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--surface-elevated), var(--color-info-soft));
+}
+
+.next-step-copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.next-step-copy h2 {
+  margin: 6px 0 4px;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+}
+
+.next-step-copy p {
+  max-width: 620px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.next-step-action {
+  flex-shrink: 0;
 }
 
 .header-left h1 {
@@ -389,11 +439,8 @@ const getStatusText = (status) => {
 }
 
 .stat-card {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: var(--shadow-level-1);
+  padding: 8px 20px;
+  border-left: 2px solid var(--border-default);
 }
 
 .stat-label {
@@ -684,6 +731,7 @@ const getStatusText = (status) => {
 .action-card:hover {
   border-color: var(--color-action-blue);
   box-shadow: var(--shadow-level-2);
+  transform: translateY(-1px);
 }
 
 .action-icon {
@@ -772,9 +820,21 @@ const getStatusText = (status) => {
 
 @media (max-width: 768px) {
   .dashboard {
-  background: var(--surface-default);
-  min-height: 100vh;
-  padding: 24px;
+    padding: 16px;
+  }
+
+  .dashboard-header,
+  .next-step-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .next-step-panel {
+    padding: 20px;
+  }
+
+  .next-step-action {
+    width: 100%;
   }
   
   .stats-grid {
