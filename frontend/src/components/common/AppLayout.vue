@@ -3,26 +3,33 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
+          <span class="logo-mark" aria-hidden="true">J3</span>
           <span class="logo-text">小林工具箱</span>
         </div>
-        <button @click="sidebarCollapsed = !sidebarCollapsed" class="collapse-btn">
-          <span v-if="sidebarCollapsed">+</span>
-          <span v-else>-</span>
+        <button
+          class="collapse-btn"
+          :aria-label="sidebarCollapsed ? '展开导航' : '收起导航'"
+          @click="sidebarCollapsed = !sidebarCollapsed"
+        >
+          <span aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
         </button>
       </div>
 
       <nav class="sidebar-nav">
-        <router-link 
-          v-for="item in navItems" 
-          :key="item.path"
-          :to="item.path"
-          class="nav-item"
-          :class="{ active: isActive(item.path) }"
-        >
-          <span class="nav-icon" :class="item.icon"></span>
-          <span class="nav-label">{{ item.label }}</span>
-          <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
-        </router-link>
+        <div v-for="group in navGroups" :key="group.label" class="nav-group">
+          <div class="nav-group-label">{{ group.label }}</div>
+          <router-link
+            v-for="item in group.items"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isActive(item.path) }"
+          >
+            <span class="nav-icon" :class="item.icon" aria-hidden="true"></span>
+            <span class="nav-label">{{ item.label }}</span>
+            <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
+          </router-link>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -42,39 +49,40 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const sidebarCollapsed = ref(false)
-const isDark = ref(false)
+const { isDark, toggleTheme } = useTheme()
 
-const navItems = [
-  { path: '/', label: '控制台', icon: 'dashboard' },
-  { path: '/video-notes', label: '视频笔记', icon: 'video' },
-  { path: '/optimize', label: '简历优化', icon: 'optimize' },
-  { path: '/resumes', label: '简历管理', icon: 'resume' },
-  { path: '/agent', label: '求职助手', icon: 'assistant' },
-  { path: '/settings', label: '设置', icon: 'settings' }
+const navGroups = [
+  {
+    label: '工作台',
+    items: [
+      { path: '/', label: '控制台', icon: 'dashboard' },
+      { path: '/agent', label: '求职助手', icon: 'assistant' }
+    ]
+  },
+  {
+    label: '内容工具',
+    items: [
+      { path: '/resumes', label: '简历管理', icon: 'resume' },
+      { path: '/optimize', label: '简历优化', icon: 'optimize' },
+      { path: '/video-notes', label: '视频笔记', icon: 'video' }
+    ]
+  },
+  {
+    label: '分析工具',
+    items: [{ path: '/decompose', label: '信息拆解', icon: 'decompose' }]
+  }
 ]
 
 const isActive = (path) => {
   return route.path === path || (path !== '/' && route.path.startsWith(path))
 }
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'dark') {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
-  }
-})
 </script>
 
 <style scoped>
@@ -127,12 +135,30 @@ onMounted(() => {
   letter-spacing: -0.5px;
 }
 
+.logo-mark {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  margin-right: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--text-on-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
 :root.dark .logo-text {
   color: var(--color-focus-blue);
 }
 
 .sidebar-collapsed .logo-text {
   display: none;
+}
+
+.sidebar-collapsed .logo-mark {
+  margin-right: 0;
 }
 
 .collapse-btn {
@@ -186,6 +212,19 @@ onMounted(() => {
   overflow-y: auto;
 }
 
+.nav-group + .nav-group {
+  margin-top: 12px;
+}
+
+.nav-group-label {
+  padding: 0 16px 8px;
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -214,12 +253,16 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background: var(--color-action-blue);
-  color: white;
+  background: var(--color-info-soft);
+  color: var(--color-action-blue);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-action-blue);
 }
 
 :root.dark .nav-item.active {
-  background: var(--color-focus-blue);
+  background: var(--color-info-soft);
+  color: var(--color-focus-blue);
+  box-shadow: inset 3px 0 0 var(--color-focus-blue);
 }
 
 .nav-icon {
@@ -233,7 +276,7 @@ onMounted(() => {
 
 .nav-item.active .nav-icon {
   opacity: 1;
-  background: var(--surface-elevated);
+  background: currentColor;
 }
 
 .nav-label {
@@ -244,7 +287,8 @@ onMounted(() => {
   flex: 1;
 }
 
-.sidebar-collapsed .nav-label {
+.sidebar-collapsed .nav-label,
+.sidebar-collapsed .nav-group-label {
   display: none;
 }
 
