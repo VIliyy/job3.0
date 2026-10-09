@@ -25,6 +25,15 @@
       </button>
     </section>
 
+    <div v-if="dashboardError" class="dashboard-alert error" role="alert">
+      {{ dashboardError }}
+      <button class="btn-link" @click="loadDashboard">重试</button>
+    </div>
+
+    <div v-if="dashboardLoading" class="dashboard-alert" role="status" aria-live="polite">
+      正在加载控制台数据...
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">简历数量</div>
@@ -107,14 +116,17 @@
               :key="period"
               class="btn-period"
               :class="{ active: selectedPeriod === period }"
-              @click="selectedPeriod = period"
+              @click="selectPeriod(period)"
             >
               {{ period }}
             </button>
           </div>
         </div>
         <div class="card-content">
-          <div class="chart-placeholder">
+          <div v-if="!dashboardLoading && chartData.length === 0" class="empty-state">
+            <p>暂无趋势数据</p>
+          </div>
+          <div v-else class="chart-placeholder">
             <div class="chart-bars">
               <div v-for="(value, index) in chartData" :key="index" class="chart-bar-container">
                 <div class="chart-bar" :style="{ height: value + '%' }"></div>
@@ -181,11 +193,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { resumeApi, applicationApi, optimizeApi } from '@/api'
+import { dashboardApi } from '@/api'
+import { toast } from '@/composables/useToast'
 
 const isDark = ref(false)
 const currentTime = ref('')
 const selectedPeriod = ref('7天')
+const dashboardLoading = ref(false)
+const dashboardError = ref('')
 
 const periods = ['7天', '30天', '90天']
 
@@ -200,63 +215,63 @@ const stats = ref({
 const recentOptimizations = ref([])
 const recentApplications = ref([])
 
+const periodDays = (period) => ({ '7天': 7, '30天': 30, '90天': 90 })[period] || 7
+
 async function loadDashboard() {
+  dashboardLoading.value = true
+  dashboardError.value = ''
   try {
-    const [resumeList, appList] = await Promise.all([
-      resumeApi.list({ limit: 100 }).catch(() => []),
-      applicationApi.list({ limit: 100 }).catch(() => [])
-    ])
-    const resumes = Array.isArray(resumeList) ? resumeList : []
-    const apps = Array.isArray(appList) ? appList : []
-
-    // 统计：简历数、投递数、优化次数与平均分
-    let optimizations = 0
-    let scoreSum = 0
-    const recentOpts = []
-    for (const resume of resumes) {
-      try {
-        const vData = await optimizeApi.versions(resume.id)
-        const versions = vData?.versions || []
-        optimizations += versions.length
-        for (const v of versions.slice(0, 1)) {
-          if (v.optimized_score) scoreSum += v.optimized_score
-          recentOpts.push({
-            id: v.version_id,
-            title: resume.version_name || ('简历 ' + resume.id),
-            date: v.created_at ? new Date(v.created_at).toLocaleDateString('zh-CN') : '',
-            iterations: versions.length,
-            score: v.optimized_score || 0
-          })
-        }
-      } catch (e) {
-        console.warn('加载版本失败:', e)
-      }
-    }
-
-    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000
+    const data = await dashboardApi.stats({ days: periodDays(selectedPeriod.value) })
+    const summary = data?.stats || {}
     stats.value = {
-      resumeVersions: resumes.length,
-      applications: apps.length,
-      applicationsThisWeek: apps.filter(a => a.created_at && new Date(a.created_at).getTime() >= weekAgo).length,
-      optimizations,
-      avgScore: optimizations ? Math.round(scoreSum / optimizations) : 0
+      resumeVersions: summary.resume_count || 0,
+      applications: summary.application_count || 0,
+      applicationsThisWeek: summary.applications_this_week || 0,
+      optimizations: summary.optimization_count || 0,
+      avgScore: summary.avg_score ?? 0
     }
-    recentOptimizations.value = recentOpts.slice(0, 5).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-
-    recentApplications.value = apps.slice(0, 5).map(a => ({
-      id: a.id,
-      company: a.company,
-      position: a.position || '',
-      date: a.created_at ? new Date(a.created_at).toLocaleDateString('zh-CN') : '',
-      status: a.status
+    recentOptimizations.value = (data?.recent_optimizations || []).map(item => ({
+      id: item.version_id,
+      title: item.title,
+      date: formatDate(item.created_at),
+      iterations: item.version_number || 1,
+      score: item.score || 0
     }))
+    recentApplications.value = (data?.recent_applications || []).map(item => ({
+      id: item.id,
+      company: item.company,
+      position: item.position || '',
+      date: formatDate(item.created_at),
+      status: item.status
+    }))
+    updateTrend(data?.trend || [])
   } catch (e) {
-    console.error('加载控制台数据失败:', e)
+    dashboardError.value = '控制台数据加载失败，请检查后端服务后重试。'
+    toast.error(dashboardError.value)
+  } finally {
+    dashboardLoading.value = false
   }
 }
 
-const chartLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-const chartData = ref([60, 75, 45, 80, 90, 65, 85])
+const chartLabels = ref([])
+const chartData = ref([])
+
+function formatDate(value) {
+  return value ? new Date(value).toLocaleDateString('zh-CN') : ''
+}
+
+function updateTrend(trend) {
+  const points = Array.isArray(trend) ? trend : []
+  chartLabels.value = points.map(point => point.label || point.date)
+  const counts = points.map(point => (point.optimizations || 0) + (point.applications || 0))
+  const max = Math.max(...counts, 0)
+  chartData.value = counts.map(count => max ? Math.max(8, Math.round((count / max) * 100)) : 0)
+}
+
+function selectPeriod(period) {
+  selectedPeriod.value = period
+  loadDashboard()
+}
 
 const tips = ref([
   {
@@ -390,6 +405,26 @@ const getStatusText = (status) => {
 
 .next-step-action {
   flex-shrink: 0;
+}
+
+.dashboard-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.dashboard-alert.error {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: var(--color-error-soft);
+  color: var(--color-error);
 }
 
 .header-left h1 {
