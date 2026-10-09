@@ -10,28 +10,29 @@
       </div>
       
       <div class="form-group">
-        <label>API Key</label>
-        <input v-model="apiKey" type="password" placeholder="sk-..." class="input" />
+        <label for="api-key">API Key</label>
+        <input id="api-key" v-model="apiKey" type="password" placeholder="sk-..." class="input" />
       </div>
       
-      <button @click="saveAPIKey" class="btn-save">Save</button>
+      <button @click="saveAPIKey" class="btn-save" :disabled="saving || !apiKey">{{ saving ? '保存中...' : '保存' }}</button>
     </div>
 
     <div class="section">
       <h2>Obsidian 知识库（视频笔记导出）</h2>
       <div class="form-group">
-        <label>Vault 根目录路径</label>
-        <input v-model="obsidianPath" class="input" placeholder="C:\Users\xxx\Documents\MyVault" />
+        <label for="obsidian-path">Vault 根目录路径</label>
+        <input id="obsidian-path" v-model="obsidianPath" class="input" placeholder="C:\Users\xxx\Documents\MyVault" />
       </div>
       <div class="status-card" :class="obsidianValid ? 'status-ok' : 'status-warn'">
         <span>{{ obsidianStatus }}</span>
       </div>
-      <button @click="saveObsidian" class="btn-save">保存 Obsidian 配置</button>
+      <button @click="saveObsidian" class="btn-save" :disabled="saving">{{ saving ? '保存中...' : '保存 Obsidian 配置' }}</button>
     </div>
     
     <div class="section">
       <h2>Local Data</h2>
-      <button @click="clearData" class="btn-clear">Clear All</button>
+      <p class="section-hint">仅清除本浏览器中的界面偏好，不会删除服务器上的简历、投递或聊天记录。</p>
+      <button @click="clearData" class="btn-clear">清除本地偏好</button>
     </div>
     
     <div v-if="message" class="toast" :class="messageType">{{ message }}</div>
@@ -94,6 +95,7 @@ const saveAPIKey = async () => {
 }
 
 const saveObsidian = async () => {
+  saving.value = true
   try {
     const { videoApi } = await import("@/api")
     await videoApi.saveConfig({ obsidian_vault_path: obsidianPath.value })
@@ -103,13 +105,16 @@ const saveObsidian = async () => {
     showMsg("Obsidian 配置已保存")
   } catch (err: any) {
     showMsg(err.message || "保存失败", "error")
+  } finally {
+    saving.value = false
   }
 }
 
 const clearData = () => {
   if (confirm("Clear all data?")) {
-    localStorage.clear()
-    showMsg("Data cleared")
+    localStorage.removeItem('theme')
+    document.documentElement.classList.remove('dark')
+    showMsg("本地偏好已清除")
   }
 }
 </script>
@@ -127,7 +132,9 @@ h1 { font-size: 36px; margin: 0 0 8px 0; }
 .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
 .input { width: 100%; padding: 12px 16px; border: 1px solid var(--color-border-light); border-radius: 8px; font-size: 14px; }
 .btn-save { width: 100%; padding: 14px; background: var(--color-primary); color: white; border: none; border-radius: 10px; cursor: pointer; }
+.btn-save:disabled { opacity: 0.55; cursor: not-allowed; }
 .btn-clear { padding: 8px 16px; background: rgba(239, 68, 68, 0.1); color: var(--color-error); border: 1px solid var(--color-error); border-radius: 8px; cursor: pointer; }
+.section-hint { margin: -8px 0 16px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
 .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 14px; z-index: 1000; }
 .toast.success { background: var(--color-success); color: white; }
 .toast.error { background: var(--color-error); color: white; }

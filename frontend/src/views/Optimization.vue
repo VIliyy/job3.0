@@ -225,22 +225,21 @@ async function startOptimization() {
     setStepStatus("save", "running")
     currentStepHint.value = "正在保存简历内容"
     progress.value = 5
-    const saveData = { slot: 1, content: resumeText.value, category: "tech", version_name: "优化版本" }
-    const saved = await resumeApi.saveText(1, resumeText.value, "tech", "优化版本").catch(() => null)
+    const saved = await resumeApi.saveText(1, resumeText.value, "tech", "优化版本")
     if (saved?.id) {
-      resumeId = saved.id
       resumeId = saved.id
       await loadResumes()
       selectedResumeId.value = String(saved.id)
-      setStepStatus("save", "complete")
-    } else {
       setStepStatus("save", "complete")
     }
 
     setStepStatus("jd", "running")
     currentStepHint.value = "正在分析 JD 关键要求"
     progress.value = 20
-    const jdAnalysis = await optimizeApi.analyzeJd({ raw_content: jdText.value }).catch(() => null)
+    const jdAnalysis = await optimizeApi.analyzeJd(
+      { raw_content: jdText.value },
+      { signal: abortController.signal }
+    )
     setStepStatus("jd", "complete")
 
     setStepStatus("match", "running")

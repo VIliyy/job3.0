@@ -102,6 +102,10 @@ const navGroups = [
   {
     label: '分析工具',
     items: [{ path: '/decompose', label: '信息拆解', icon: 'decompose' }]
+  },
+  {
+    label: '系统',
+    items: [{ path: '/settings', label: '设置', icon: 'settings' }]
   }
 ]
 

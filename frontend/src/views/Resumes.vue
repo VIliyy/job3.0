@@ -86,9 +86,16 @@
         >
           <div class="app-header">
             <div class="app-company">{{ app.company }}</div>
-            <span class="app-status-badge" :class="app.status">
-              {{ getAppStatusLabel(app.status) }}
-            </span>
+            <select
+              class="app-status-select"
+              :value="app.status"
+              :aria-label="`${app.company} 投递状态`"
+              @change="updateApplicationStatus(app, $event.target.value)"
+            >
+              <option v-for="status in applicationStatuses" :key="status.value" :value="status.value">
+                {{ status.label }}
+              </option>
+            </select>
           </div>
           <div class="app-body">
             <p class="app-position">{{ app.position || '未指定岗位' }}</p>
@@ -311,6 +318,19 @@ const filteredApplications = computed(() => {
   if (!filterStatus.value) return applications.value
   return applications.value.filter(a => a.status === filterStatus.value)
 })
+
+async function updateApplicationStatus(application, status) {
+  const previousStatus = application.status
+  if (status === previousStatus) return
+  application.status = status
+  try {
+    await applicationApi.updateStatus(application.id, status)
+    toast.success('投递状态已更新')
+  } catch (e) {
+    application.status = previousStatus
+    toast.error('状态更新失败：' + (e.message || e))
+  }
+}
 
 function getCategoryCount(category) {
   if (category === 'all') return resumes.value.length
@@ -556,6 +576,15 @@ onMounted(() => {
 .app-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
 .app-company { font-weight: 600; }
 .app-status-badge { font-size: 11px; padding: 4px 8px; background: var(--surface-stone); border-radius: 4px; }
+.app-status-select {
+  max-width: 96px;
+  padding: 4px 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-size: 11px;
+}
 .app-position { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
 .app-meta { font-size: 12px; color: var(--text-muted); }
 .app-meta span { margin-right: 12px; }
