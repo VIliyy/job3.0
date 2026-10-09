@@ -547,7 +547,7 @@ onMounted(() => {
 .detail-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; font-size: 13px; color: var(--text-muted); }
 .detail-section { margin-bottom: 20px; }
 .detail-section h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-.resume-content { background: var(--surface-stone); border-radius: 8px; padding: 14px; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.7; max-height: 300px; overflow-y: auto; }
+.resume-content { background: var(--surface-stone); color: var(--text-primary); border-radius: 8px; padding: 14px; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.7; max-height: 300px; overflow-y: auto; }
 .version-list { display: flex; flex-direction: column; gap: 8px; }
 .version-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--surface-elevated); cursor: pointer; font-size: 13px; width: 100%; }
 .version-item.active { border-color: var(--color-info); background: rgba(59,130,246,0.06); }
@@ -562,7 +562,7 @@ onMounted(() => {
 .diff-type-badge { flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: var(--surface-default); }
 .compare-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .compare-col h5 { font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
-.compare-col pre { background: var(--surface-stone); border-radius: 8px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 12px; line-height: 1.6; max-height: 260px; overflow-y: auto; }
+.compare-col pre { background: var(--surface-stone); color: var(--text-primary); border-radius: 8px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 12px; line-height: 1.6; max-height: 260px; overflow-y: auto; }
 .applications-section { background: var(--surface-elevated); border-radius: 12px; padding: 24px; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .section-header h2 { font-size: 20px; font-weight: 600; }
