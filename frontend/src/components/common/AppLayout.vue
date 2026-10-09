@@ -1,6 +1,12 @@
 <template>
-  <div class="app-layout" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
-    <aside class="sidebar">
+  <div class="app-layout" :class="{ 'sidebar-collapsed': sidebarCollapsed, 'mobile-menu-open': mobileMenuOpen }">
+    <button
+      v-if="mobileMenuOpen"
+      class="mobile-menu-backdrop"
+      aria-label="关闭导航"
+      @click="closeMobileMenu"
+    ></button>
+    <aside class="sidebar" :aria-hidden="isMobile && !mobileMenuOpen">
       <div class="sidebar-header">
         <div class="logo">
           <span class="logo-mark" aria-hidden="true">J3</span>
@@ -12,6 +18,14 @@
           @click="sidebarCollapsed = !sidebarCollapsed"
         >
           <span aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
+        </button>
+        <button
+          v-if="isMobile"
+          class="mobile-close-btn"
+          aria-label="关闭导航"
+          @click="closeMobileMenu"
+        >
+          <span aria-hidden="true">×</span>
         </button>
       </div>
 
@@ -43,18 +57,30 @@
     </aside>
 
     <main class="main-content">
+      <button
+        v-if="isMobile"
+        class="mobile-menu-btn"
+        aria-label="打开导航"
+        :aria-expanded="mobileMenuOpen"
+        @click="mobileMenuOpen = true"
+      >
+        <span aria-hidden="true">☰</span>
+      </button>
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useTheme } from '@/composables/useTheme'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const sidebarCollapsed = ref(false)
+const mobileMenuOpen = ref(false)
+const viewportWidth = ref(typeof globalThis === 'undefined' ? 1440 : globalThis.innerWidth)
+const isMobile = computed(() => viewportWidth.value <= 768)
 const { isDark, toggleTheme } = useTheme()
 
 const navGroups = [
@@ -83,12 +109,43 @@ const isActive = (path) => {
   return route.path === path || (path !== '/' && route.path.startsWith(path))
 }
 
+function closeMobileMenu() {
+  mobileMenuOpen.value = false
+}
+
+function updateViewport() {
+  viewportWidth.value = globalThis.innerWidth
+  if (!isMobile.value) closeMobileMenu()
+}
+
+function onKeydown(event) {
+  if (event.key === 'Escape') closeMobileMenu()
+}
+
+watch(() => route.path, closeMobileMenu)
+
+onMounted(() => {
+  globalThis.addEventListener('resize', updateViewport)
+  globalThis.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  globalThis.removeEventListener('resize', updateViewport)
+  globalThis.removeEventListener('keydown', onKeydown)
+})
+
 </script>
 
 <style scoped>
 .app-layout {
   display: flex;
   min-height: 100vh;
+}
+
+.mobile-menu-backdrop,
+.mobile-menu-btn,
+.mobile-close-btn {
+  display: none;
 }
 
 .sidebar {
@@ -400,6 +457,21 @@ const isActive = (path) => {
   transition: margin-left 200ms ease, background-color 200ms ease;
 }
 
+.mobile-menu-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 150;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 :root.dark .main-content {
   background: var(--color-background);
 }
@@ -443,8 +515,43 @@ const isActive = (path) => {
 }
 
 @media (max-width: 768px) {
+  .mobile-menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    border: 0;
+    background: rgba(15, 23, 42, 0.38);
+    cursor: pointer;
+  }
+
   .sidebar {
     transform: translateX(-100%);
+    z-index: 300;
+    width: min(280px, 86vw);
+    transition: transform 200ms ease, background-color 200ms ease;
+  }
+
+  .mobile-menu-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .mobile-menu-btn,
+  .mobile-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-close-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 20px;
   }
   
   .main-content {
