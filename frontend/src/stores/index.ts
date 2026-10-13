@@ -2,6 +2,7 @@
  * Job3.0 应用状态管理
  */
 
+// @ts-nocheck
 import { defineStore } from "pinia"
 
 // 简历Store

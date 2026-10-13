@@ -293,11 +293,17 @@
 /* === Page Transitions === */
 
 .page-enter-active {
-  animation: slide-up var(--duration-page) var(--ease-out-quart);
+  animation: slide-up var(--duration-page) var(--ease-out-quart) both;
 }
 
 .page-leave-active {
-  animation: fade-out var(--duration-fast) var(--ease-out-quart);
+  animation: fade-out var(--duration-fast) var(--ease-out-quart) both;
+}
+
+/* Page transitions should feel like a change of workspace, not a modal pop. */
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
 }
 
 /* === Hover Interactions === */

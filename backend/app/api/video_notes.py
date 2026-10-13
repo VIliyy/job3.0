@@ -14,7 +14,7 @@ import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -28,12 +28,31 @@ from app.services.video.downloader import detect_platform, LOCAL_MEDIA_EXTS
 from app.services.video.generator import VideoNoteGenerator
 from app.services.video.obsidian import validate_vault, ObsidianExporter
 from app.services.video.summarizer import resolve_llm_config
+from app.core.utils import resolve_within_directory, sanitize_filename, save_upload_file
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/video-notes", tags=["视频笔记"])
 
 _executor = ThreadPoolExecutor(max_workers=max(1, settings.VIDEO_TASK_WORKERS))
+
+
+def recover_incomplete_video_tasks() -> int:
+    """Resubmit persisted video tasks that were interrupted by a restart."""
+    db = SessionLocal()
+    recovered = 0
+    try:
+        tasks = (
+            db.query(VideoTask)
+            .filter(VideoTask.status.in_(("PENDING", "PARSING", "DOWNLOADING", "TRANSCRIBING", "SUMMARIZING", "OBSIDIAN")))
+            .all()
+        )
+        for task in tasks:
+            _executor.submit(_run_generator, task.task_id)
+            recovered += 1
+        return recovered
+    finally:
+        db.close()
 
 
 def _run_generator(task_id: str):
@@ -63,6 +82,11 @@ def generate_note(data: VideoNoteCreate, db: Session = Depends(get_db)):
             platform = detect_platform(data.video_url)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    if platform == "local":
+        try:
+            resolve_within_directory(data.video_url, settings.UPLOAD_DIR)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="本地媒体文件必须位于上传目录内") from exc
 
     task = VideoTask(
         task_id=uuid.uuid4().hex[:16],
@@ -83,7 +107,7 @@ def generate_note(data: VideoNoteCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/tasks", response_model=list[VideoTaskBrief])
-def list_tasks(limit: int = 50, db: Session = Depends(get_db)):
+def list_tasks(limit: int = Query(50, ge=1, le=200), db: Session = Depends(get_db)):
     tasks = db.query(VideoTask).order_by(VideoTask.id.desc()).limit(min(limit, 200)).all()
     return [VideoTaskBrief.model_validate(t) for t in tasks]
 
@@ -98,17 +122,29 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
     return detail
 
 
+@router.delete("/tasks/{task_id}")
+def delete_task(task_id: str, db: Session = Depends(get_db)):
+    task = db.query(VideoTask).filter(VideoTask.task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    db.delete(task)
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/upload")
 async def upload_local(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in LOCAL_MEDIA_EXTS:
         raise HTTPException(status_code=400, detail=f"不支持的媒体格式: {ext or '未知'}")
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    safe_name = os.path.basename(file.filename or "video")
+    safe_name = sanitize_filename(file.filename or "video")
     save_path = os.path.join(settings.UPLOAD_DIR, f"video_{uuid.uuid4().hex[:8]}_{safe_name}")
-    with open(save_path, "wb") as f:
-        f.write(await file.read())
-    return {"path": os.path.abspath(save_path), "url": f"/uploads/{os.path.basename(save_path)}"}
+    try:
+        file_size = await save_upload_file(file, save_path, settings.MAX_VIDEO_UPLOAD_SIZE)
+    except ValueError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
+    return {"path": os.path.abspath(save_path), "url": f"/uploads/{os.path.basename(save_path)}", "size": file_size}
 
 
 @router.get("/config", response_model=VideoConfigOut)

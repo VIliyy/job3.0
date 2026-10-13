@@ -5,7 +5,10 @@ Job3.0 求职系统 - 性能监控中间件
 
 import time
 import logging
+import json
+import uuid
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
@@ -52,16 +55,27 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """请求日志中间件"""
     
     async def dispatch(self, request: Request, call_next):
-        request_id = f"{int(time.time() * 1000)}"
+        incoming_id = request.headers.get("X-Request-ID", "").strip()
+        request_id = incoming_id[:128] if incoming_id else str(uuid.uuid4())
+        request.state.request_id = request_id
         
         # 记录请求开始
-        logger.info(f"[{request_id}] {request.method} {request.url.path} started")
+        logger.info(json.dumps({
+            "event": "request_started",
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+        }, ensure_ascii=False))
         
         try:
             response = await call_next(request)
             
             # 记录请求完成
-            logger.info(f"[{request_id}] Completed with {response.status_code}")
+            logger.info(json.dumps({
+                "event": "request_completed",
+                "request_id": request_id,
+                "status": response.status_code,
+            }, ensure_ascii=False))
             
             # 添加request_id到响应头
             response.headers["X-Request-ID"] = request_id
@@ -69,5 +83,37 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             return response
             
         except Exception as e:
-            logger.error(f"[{request_id}] Error: {str(e)}")
+            logger.exception("request_failed", extra={"request_id": request_id})
             raise
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add conservative browser security headers to every response."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        return response
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject oversized JSON requests before FastAPI parses their body."""
+
+    def __init__(self, app, max_json_bytes: int):
+        super().__init__(app)
+        self.max_json_bytes = max_json_bytes
+
+    async def dispatch(self, request: Request, call_next):
+        content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        content_length = request.headers.get("content-length")
+        if content_type.endswith("/json") or content_type.endswith("+json"):
+            try:
+                declared_length = int(content_length or 0)
+            except ValueError:
+                declared_length = 0
+            if declared_length > self.max_json_bytes:
+                return JSONResponse(status_code=413, content={"detail": "request body is too large"})
+        return await call_next(request)

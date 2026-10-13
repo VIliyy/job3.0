@@ -3,7 +3,10 @@
 Job3.0 多Agent协作系统 - API端点
 """
 
+import json
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import asyncio
@@ -76,6 +79,7 @@ async def optimize_resume(request: OptimizationRequest):
             "all_outputs": {
                 "planner": result.get("planner_output"),
                 "recruiter": result.get("recruiter_output"),
+                "writer": result.get("writer_output"),
                 "critic": result.get("critic_output"),
                 "interviewer": result.get("interviewer_output"),
                 "advisor": result.get("advisor_output")
@@ -92,7 +96,11 @@ async def optimize_resume_stream(request: OptimizationRequest):
     """
     多Agent协作简历优化 - 流式版本
     """
-    from sse_starlette.sse import EventSourceResponse
+    def sse_frame(event: str, data: Dict[str, Any]) -> str:
+        return (
+            f"event: {event}\n"
+            f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+        )
     
     async def event_generator():
         callback = SSEProgressCallback()
@@ -111,33 +119,29 @@ async def optimize_resume_stream(request: OptimizationRequest):
             
             # 实时发送事件
             while not task.done():
-                if callback.events:
+                while callback.events:
                     event = callback.events.pop(0)
-                    yield {
-                        "event": event.get("type", "message"),
-                        "data": str(event)
-                    }
+                    yield sse_frame(event.get("type", "message"), event)
                 await asyncio.sleep(0.1)
-            
+
             # 发送最终结果
             result = await task
-            yield {
-                "event": "final",
-                "data": str({
+            while callback.events:
+                event = callback.events.pop(0)
+                yield sse_frame(event.get("type", "message"), event)
+            yield sse_frame("final", {
                     "status": result.get("status"),
                     "optimized_resume": result.get("optimized_resume"),
                     "score": result.get("match_score"),
                     "iterations": result.get("iteration")
                 })
-            }
-            
         except Exception as e:
-            yield {
-                "event": "error",
-                "data": str(e)
-            }
-    
-    return EventSourceResponse(event_generator())
+            yield sse_frame("error", {"error": str(e)})
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+    )
 
 @router.get("/status")
 async def get_agent_status():

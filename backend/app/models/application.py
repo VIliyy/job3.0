@@ -26,6 +26,7 @@ class Application(Base):
         Index("idx_app_status", "status"),
         Index("idx_app_company", "company"),
         Index("idx_app_created", "created_at"),
+        Index("uq_app_job_url", "job_url", unique=True),
         {"sqlite_autoincrement": True}
     )
 
@@ -43,7 +44,7 @@ class Application(Base):
     progress_notes = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     resume = relationship("Resume", back_populates="applications")
 

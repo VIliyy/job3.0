@@ -54,3 +54,20 @@ SENSITIVE_BACKUP.md
 # ============ 浏览器无头截图临时目录 ============
 .edge-tmp*/
 bad.md
+
+# ============ Local test and capture artifacts ============
+.coverage
+coverage.xml
+_boss_probe.png
+_dashboard_check.png
+_shot.ps1
+_haiyou.*
+_haiyou_src/
+backend/_*.py
+backend/_*.txt
+backend/pip_list.txt
+docs/screenshots/*
+!docs/screenshots/agent.png
+!docs/screenshots/dashboard.png
+!docs/screenshots/optimize.png
+!docs/screenshots/video-notes.png

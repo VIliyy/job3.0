@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
-"""视频笔记接口模型（小林工具箱）"""
+"""Video notes API schemas."""
+
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class VideoNoteCreate(BaseModel):
-    video_url: str = Field(..., description="视频链接或本地文件路径")
-    platform: str = Field("auto", description="auto/bilibili/douyin/local")
-    style: str = "minimal"
-    formats: List[str] = []
-    extras: Optional[str] = None
+    video_url: str = Field(..., min_length=1, max_length=1024)
+    platform: str = Field("auto", pattern="^(auto|bilibili|douyin|local)$")
+    style: str = Field("minimal", max_length=32)
+    formats: List[str] = Field(default_factory=list, max_length=20)
+    extras: Optional[str] = Field(None, max_length=10_000)
     export_obsidian: bool = False
 
 
 class VideoTaskBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     task_id: str
     platform: str
@@ -27,13 +31,10 @@ class VideoTaskBrief(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
 
 class VideoTaskDetail(VideoTaskBrief):
     style: str = "minimal"
-    formats: List[str] = []
+    formats: List[str] = Field(default_factory=list)
     extras: Optional[str] = None
     export_obsidian: bool = False
     markdown: Optional[str] = None
@@ -43,7 +44,7 @@ class VideoTaskDetail(VideoTaskBrief):
 
 
 class VideoConfigIn(BaseModel):
-    obsidian_vault_path: str = ""
+    obsidian_vault_path: str = Field("", max_length=1024)
 
 
 class VideoConfigOut(BaseModel):

@@ -3,17 +3,25 @@
 小林工具箱 - 核心配置
 """
 
-from pydantic_settings import BaseSettings
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
+import secrets
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
     """应用配置"""
 
     # 项目基础
     APP_NAME: str = "小林工具箱"
     APP_VERSION: str = "2.0.0"
-    DEBUG: bool = True
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = False
 
     # 数据库 - 使用SQLite（本地存储）
     DATABASE_URL: str = "sqlite:///./job3.db"
@@ -25,10 +33,12 @@ class Settings(BaseSettings):
 
     # JWT认证（可选）
     # 生产环境请在 .env 文件中设置随机密钥
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "CHANGE-THIS-IN-PRODUCTION-USE-RANDOM-KEY")
+    SECRET_KEY: str = "dev-only-secret-change-me"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # 浏览器扩展桥接 Token（海投助手本地桥）：扩展请求头 X-Bridge-Token 需与之一致
+    BRIDGE_TOKEN: str = "job3-bridge-local-2026"
     # DeepSeek API
     DEEPSEEK_API_KEY: Optional[str] = None
     DEEPSEEK_MODEL: str = "deepseek-chat"
@@ -54,24 +64,40 @@ class Settings(BaseSettings):
     LLM_MODEL: Optional[str] = None
     # 视频笔记任务并发数
     VIDEO_TASK_WORKERS: int = 2
+    PUBLIC_UPLOADS: bool = True
+    MAX_TEXT_LENGTH: int = 100_000
+    MAX_JSON_BODY_SIZE: int = 1 * 1024 * 1024
+    MAX_VIDEO_UPLOAD_SIZE: int = 512 * 1024 * 1024
+    ENABLE_TASK_RECOVERY: bool = False
 
     # CORS
-    CORS_ORIGINS: list = [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://localhost:5177",
-        "http://localhost:5178",
-        "http://localhost:5179",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5175",
-    ]
+    CORS_ORIGINS: str = (
+        "http://localhost:5173,http://localhost:5174,http://localhost:5175,"
+        "http://localhost:5176,http://localhost:5177,http://localhost:5178,"
+        "http://localhost:5179,http://localhost:3000,"
+        "http://127.0.0.1:5173,http://127.0.0.1:5175"
+    )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    @property
+    def cors_origins(self) -> list[str]:
+        """Return the comma-separated CORS allowlist as normalized origins."""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    @model_validator(mode="after")
+    def validate_runtime_security(self):
+        environment = self.ENVIRONMENT.strip().lower()
+        if environment in {"prod", "production"}:
+            if self.DEBUG:
+                raise ValueError("DEBUG must be false in production")
+            if len(self.SECRET_KEY) < 32 or self.SECRET_KEY.startswith("dev-"):
+                raise ValueError("SECRET_KEY must be a random value of at least 32 characters")
+            if len(self.BRIDGE_TOKEN) < 24 or self.BRIDGE_TOKEN == "job3-bridge-local-2026":
+                raise ValueError("BRIDGE_TOKEN must be explicitly configured in production")
+            self.PUBLIC_UPLOADS = False
+            self.ENABLE_TASK_RECOVERY = True
+        elif not self.SECRET_KEY:
+            self.SECRET_KEY = secrets.token_urlsafe(32)
+        return self
 
 settings = Settings()
 

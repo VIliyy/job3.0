@@ -6,11 +6,17 @@ from app.models.application import Application, ApplicationStatus
 from app.models.jd import JDAnalysis
 from app.models.greeting import GreetingTemplate
 from app.models.video_task import VideoTask
+from app.models.agent_chat import AgentChat
+from app.models.decompose_task import DecomposeTask, DecomposeContract, DecomposeDecision
+from app.models.job_snapshot import JobSnapshot
 
 __all__ = [
     "Resume", "ResumeVersion", "ResumeCategory", "ResumeStatus",
     "Application", "ApplicationStatus",
     "JDAnalysis",
     "GreetingTemplate",
-    "VideoTask"
+    "VideoTask",
+    "AgentChat",
+    "DecomposeTask", "DecomposeContract", "DecomposeDecision",
+    "JobSnapshot"
 ]

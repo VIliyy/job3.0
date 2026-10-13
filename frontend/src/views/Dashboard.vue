@@ -34,23 +34,23 @@
       正在加载控制台数据...
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
+    <div class="stats-grid stagger-fade">
+      <div class="stat-card hover-lift">
         <div class="stat-label">简历数量</div>
         <div class="stat-value">{{ stats.resumeVersions }}</div>
         <div class="stat-change">实时数据</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card hover-lift">
         <div class="stat-label">投递记录</div>
         <div class="stat-value">{{ stats.applications }}</div>
         <div class="stat-change">{{ stats.applicationsThisWeek }} 本周</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card hover-lift">
         <div class="stat-label">优化次数</div>
         <div class="stat-value">{{ stats.optimizations }}</div>
         <div class="stat-change">实时数据</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card hover-lift">
         <div class="stat-label">平均分数</div>
         <div class="stat-value">{{ stats.avgScore }}</div>
         <div class="stat-change">实时数据</div>
@@ -350,11 +350,34 @@ const getStatusText = (status) => {
 
 <style scoped>
 .dashboard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: var(--surface-default);
   min-height: 100vh;
   padding: 32px;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+.dashboard::before {
+  content: "";
+  position: absolute;
+  top: -180px;
+  right: -120px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-info-soft), transparent 68%);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: -1;
+  animation: dashboard-orbit 16s ease-in-out infinite alternate;
+}
+
+.dashboard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-header {
@@ -364,9 +387,12 @@ const getStatusText = (status) => {
   margin-bottom: 20px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--border-default);
+  animation: dashboard-rise 420ms var(--ease-out-quart) both;
 }
 
 .next-step-panel {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -376,6 +402,23 @@ const getStatusText = (status) => {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--surface-elevated), var(--color-info-soft));
+  box-shadow: var(--shadow-level-1);
+  animation: dashboard-rise 520ms var(--ease-out-quart) both;
+}
+
+.next-step-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.2) 48%, transparent 72%);
+  transform: translateX(-110%);
+  animation: panel-sheen 7s var(--ease-in-out-quart) infinite;
+  pointer-events: none;
+}
+
+.next-step-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .next-step-copy {
@@ -419,6 +462,7 @@ const getStatusText = (status) => {
   background: var(--surface-elevated);
   color: var(--text-secondary);
   font-size: 13px;
+  animation: dashboard-rise 380ms var(--ease-out-quart) both;
 }
 
 .dashboard-alert.error {
@@ -474,8 +518,34 @@ const getStatusText = (status) => {
 }
 
 .stat-card {
+  position: relative;
+  overflow: hidden;
   padding: 8px 20px;
   border-left: 2px solid var(--border-default);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-action-blue), transparent);
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.stat-card:hover {
+  border-left-color: var(--color-action-blue);
+  background: var(--surface-elevated);
+}
+
+.stat-card:hover::after {
+  opacity: 0.7;
+  transform: translateX(0);
 }
 
 .stat-label {
@@ -513,6 +583,12 @@ const getStatusText = (status) => {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-level-1);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.card:hover {
+  border-color: var(--color-focus-blue);
+  box-shadow: var(--shadow-level-2);
 }
 
 .card-header {
@@ -683,7 +759,16 @@ const getStatusText = (status) => {
   background: linear-gradient(180deg, var(--color-action-blue), var(--color-focus-blue));
   border-radius: var(--radius-xs) var(--radius-xs) 0 0;
   transition: height 300ms ease;
+  transform-origin: bottom;
+  animation: chart-grow 760ms var(--ease-out-quart) both;
 }
+
+.chart-bar-container:nth-child(2) .chart-bar { animation-delay: 50ms; }
+.chart-bar-container:nth-child(3) .chart-bar { animation-delay: 100ms; }
+.chart-bar-container:nth-child(4) .chart-bar { animation-delay: 150ms; }
+.chart-bar-container:nth-child(5) .chart-bar { animation-delay: 200ms; }
+.chart-bar-container:nth-child(6) .chart-bar { animation-delay: 250ms; }
+.chart-bar-container:nth-child(7) .chart-bar { animation-delay: 300ms; }
 
 .chart-label {
   font-size: 12px;
@@ -761,12 +846,33 @@ const getStatusText = (status) => {
   cursor: pointer;
   transition: all 200ms;
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
 
 .action-card:hover {
   border-color: var(--color-action-blue);
   box-shadow: var(--shadow-level-2);
   transform: translateY(-1px);
+}
+
+.action-card::after {
+  content: "";
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  right: -28px;
+  bottom: -34px;
+  border-radius: 50%;
+  background: var(--color-info-soft);
+  transform: scale(0.6);
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+  opacity: 0;
+}
+
+.action-card:hover::after {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .action-icon {
@@ -836,6 +942,37 @@ const getStatusText = (status) => {
 
 .btn-link:hover {
   text-decoration: underline;
+}
+
+@keyframes dashboard-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dashboard-orbit {
+  from { transform: translate3d(-12px, 8px, 0) scale(0.96); }
+  to { transform: translate3d(18px, -10px, 0) scale(1.04); }
+}
+
+@keyframes panel-sheen {
+  0%, 55% { transform: translateX(-110%); }
+  75%, 100% { transform: translateX(110%); }
+}
+
+@keyframes chart-grow {
+  from { opacity: 0; transform: scaleY(0.08); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard::before,
+  .next-step-panel,
+  .next-step-panel::after,
+  .dashboard-header,
+  .dashboard-alert,
+  .chart-bar {
+    animation: none;
+  }
 }
 
 @media (max-width: 1200px) {

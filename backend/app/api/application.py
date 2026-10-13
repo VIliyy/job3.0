@@ -1,14 +1,15 @@
 ﻿# -*- coding: utf-8 -*-
 # Job3.0 求职系统 - 投递记录 API（v2.0）
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 
 from app.core.database import get_db
 from app.models.application import Application, ApplicationStatus
 from app.models.resume import Resume, ResumeStatus
-from app.schemas.application import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationWithResume, ApplicationBrief
+from app.schemas.application import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationWithResume, ApplicationBrief, ApplicationStatus as ApplicationStatusSchema
 
 router = APIRouter(prefix="/applications", tags=["投递记录 v2.0"])
 
@@ -18,6 +19,11 @@ def create_application(app_data: ApplicationCreate, db: Session = Depends(get_db
     resume = db.query(Resume).filter(Resume.id == app_data.resume_id).first()
     if not resume:
         raise HTTPException(status_code=404, detail=f"简历 {app_data.resume_id} 不存在")
+
+    if app_data.job_url:
+        duplicate = db.query(Application.id).filter(Application.job_url == app_data.job_url).first()
+        if duplicate:
+            raise HTTPException(status_code=409, detail="该职位已存在投递记录")
     
     application = Application(
         resume_id=app_data.resume_id,
@@ -32,13 +38,17 @@ def create_application(app_data: ApplicationCreate, db: Session = Depends(get_db
     
     db.add(application)
     resume.status = ResumeStatus.APPLIED
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="该职位已存在投递记录") from exc
     db.refresh(application)
     return application
 
 
 @router.get("/", response_model=List[ApplicationWithResume])
-def list_applications(resume_id: Optional[int] = None, status: Optional[str] = None, company: Optional[str] = None, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+def list_applications(resume_id: Optional[int] = None, status: Optional[ApplicationStatusSchema] = None, company: Optional[str] = None, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
     query = db.query(Application).options(joinedload(Application.resume))
     
     if resume_id:
@@ -115,7 +125,7 @@ def delete_application(app_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{app_id}/status")
-def update_application_status(app_id: int, status: str, db: Session = Depends(get_db)):
+def update_application_status(app_id: int, status: ApplicationStatusSchema, db: Session = Depends(get_db)):
     application = db.query(Application).filter(Application.id == app_id).first()
     
     if not application:

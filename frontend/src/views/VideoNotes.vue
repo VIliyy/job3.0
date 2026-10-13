@@ -91,7 +91,10 @@
           >
             <div class="task-head">
               <span class="task-title">{{ t.title || t.video_url.slice(0, 40) }}</span>
-              <span class="badge" :class="t.status.toLowerCase()">{{ statusText(t.status) }}</span>
+              <div class="task-right">
+                <span class="badge" :class="t.status.toLowerCase()">{{ statusText(t.status) }}</span>
+                <button class="task-delete" title="删除任务" @click.stop="deleteTask(t)">&times;</button>
+              </div>
             </div>
             <div class="task-meta">{{ t.platform }} · {{ t.status_message || '排队中' }}</div>
           </div>
@@ -121,6 +124,7 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { videoApi } from '@/api'
+import { toast } from '@/composables/useToast'
 
 const form = reactive({
   platform: 'auto',
@@ -159,6 +163,18 @@ const openTask = async (taskId) => {
   try {
     current.value = await videoApi.getTask(taskId)
   } catch (e) { console.error(e) }
+}
+
+const deleteTask = async (t) => {
+  if (!window.confirm('确定删除任务「' + (t.title || t.video_url.slice(0, 40)) + '」？删除后不可恢复。')) return
+  try {
+    await videoApi.deleteTask(t.task_id)
+    toast.success('任务已删除')
+    tasks.value = tasks.value.filter((x) => x.task_id !== t.task_id)
+    if (current.value && current.value.task_id === t.task_id) current.value = null
+  } catch (e) {
+    toast.error('删除失败：' + (e.message || e))
+  }
 }
 
 const refreshCurrent = async () => {
@@ -301,6 +317,7 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 .page-header h1 { font-size: 30px; margin: 0 0 8px 0; }
 .page-header p { color: var(--text-muted); margin: 0; }
 .layout { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+.left-col, .right-col { min-width: 0; }
 @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
 .card { background: var(--surface-default); border: 1px solid var(--border-default); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
 .card h2 { font-size: 16px; margin: 0 0 16px 0; }
@@ -323,17 +340,20 @@ textarea.input { font-family: inherit; resize: vertical; }
 .task-item:hover { border-color: var(--color-action-blue); }
 .task-item.active { border-color: var(--color-action-blue); background: rgba(37, 99, 235, 0.06); }
 .task-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.task-title { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.task-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.badge { padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.task-title { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; word-break: break-word; min-width: 0; }
+.task-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; overflow-wrap: anywhere; word-break: break-word; }
+.badge { padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.task-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.task-delete { padding: 2px 8px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-default); border-radius: 6px; font-size: 13px; line-height: 1.4; cursor: pointer; flex-shrink: 0; }
+.task-delete:hover { color: var(--color-error); border-color: var(--color-error); }
 .badge.success { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
 .badge.failed { background: rgba(239, 68, 68, 0.15); color: var(--color-error); }
 .badge.downloading, .badge.transcribing, .badge.summarizing, .badge.parsing, .badge.pending, .badge.obsidian { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
-.detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.detail-head h2 { margin-bottom: 8px; }
-.detail-actions { display: flex; gap: 8px; }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.detail-head h2 { margin-bottom: 8px; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+.detail-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .empty { padding: 24px 0; text-align: center; color: var(--text-muted); font-size: 14px; }
-.markdown-body { line-height: 1.7; font-size: 14px; color: var(--text-primary); overflow-wrap: break-word; }
+.markdown-body { line-height: 1.7; font-size: 14px; color: var(--text-primary); overflow-wrap: anywhere; word-break: break-word; min-width: 0; }
 .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 { margin: 16px 0 8px; line-height: 1.4; }
 .markdown-body p { margin: 8px 0; }
 .markdown-body ul { margin: 8px 0; padding-left: 22px; }

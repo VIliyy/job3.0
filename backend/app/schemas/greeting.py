@@ -3,7 +3,7 @@
 Job3.0 求职系统 - 打招呼语模板Schema
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -20,6 +20,7 @@ class GreetingTemplateUpdate(BaseModel):
     is_default: Optional[bool] = None
 
 class GreetingTemplateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     """打招呼语模板响应Schema"""
     id: int
     name: str
@@ -28,9 +29,6 @@ class GreetingTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
-
 class GreetingGenerateRequest(BaseModel):
     """生成打招呼语请求Schema"""
     template_id: Optional[int] = Field(None, description="模板ID，不传则使用默认模板")

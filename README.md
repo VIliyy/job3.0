@@ -5,9 +5,10 @@
 ## 功能特性
 
 - 🎬 **视频笔记（v2.0 新增）** - 粘贴 B站/抖音链接或选择本地音视频，自动完成 下载 → 转写 → AI 总结 → 导出 Obsidian 的完整流水线
-- 🤖 **求职助手** - 多场景 Agent 工具集：知识问答 / JD 匹配 / 面试题生成 / 打招呼语，带来源溯源的 RAG 问答
+- 🤖 **求职助手** - 多场景 Agent 工具集：知识问答 / JD 匹配 / 面试题生成 / 打招呼语
 - 📊 **AI 简历优化** - LangGraph 多 Agent 自动反思优化：输入简历 + JD，输出多维度匹配分析与 STAR 法则改写稿
 - 📄 **简历管理** - 多版本简历管理，快速切换与投递记录跟踪
+- 🧩 **BOSS 海投记录助手（v2.1 新增）** - Edge 扩展一键记录 BOSS 职位到工具箱：URL 去重、JD 快照存档、打招呼语起草、打招呼后自动记录（AI 只起草、人工发送）
 - ⚙️ **设置中心** - 配置 Obsidian Vault 路径、模型参数、Whisper 转写参数
 - 🔧 **持续更新** - 更多功能陆续加入
 
@@ -22,7 +23,7 @@
 ## 技术栈
 
 ### 前端
-- Vue 3 + TypeScript
+- Vue 3 + Vite
 - Vite
 - Pinia (状态管理)
 - Axios (HTTP客户端)
@@ -199,3 +200,8 @@ pytest tests/ --cov=app --cov-report=html
 
 MIT License
 
+## BOSS 海投记录助手（Edge 扩展，本地桥接）
+
+- 后端新增 /api/bridge/*：健康检查、简历列表、投递记录（按 job_url 去重 + JD 快照 + 打招呼语生成）、最近记录查询与删除；除 /health 外均要求请求头 X-Bridge-Token（默认 job3-bridge-local-2026，见 ackend/.env.example）
+- 数据表：job_snapshots（JD 原文与打招呼文稿存档，投递记录复用 pplications 表，带 job_url/source）
+- 扩展源码在 dge-bridge/（MV3），安装与使用说明见 dge-bridge/README.md；安全模式：AI 只起草，发送动作由人工在 BOSS 内完成

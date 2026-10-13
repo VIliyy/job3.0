@@ -8,6 +8,12 @@ const routes = [
     meta: { title: "控制台" }
   },
   {
+    path: "/decompose",
+    name: "Decompose",
+    component: () => import("../views/Decompose.vue"),
+    meta: { title: "信息拆解" }
+  },
+  {
     path: "/video-notes",
     name: "VideoNotes",
     component: () => import("../views/VideoNotes.vue"),
@@ -55,7 +61,7 @@ const router = createRouter({
 })
 
 // 路由重定向（注册在路由表中，这里只处理页面标题）
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   document.title = to.meta.title ? to.meta.title + " - 小林工具箱" : "小林工具箱"
   next()
 })

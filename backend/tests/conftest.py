@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Pytest 配置文件
 """
@@ -50,6 +50,11 @@ def db_session():
 def client(db_session):
     """创建测试客户端"""
     app.dependency_overrides[get_db] = override_get_db
+    # 信息拆解：编排循环使用测试内存库 + 禁用 LLM（规则降级）
+    from app.services import decompose_service
+    decompose_service.session_factory = TestingSessionLocal
+    from app.services import decompose_engine
+    decompose_engine.USE_LLM = False
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

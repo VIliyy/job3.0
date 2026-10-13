@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "小林工具箱 · BOSS 海投记录助手",
+  "version": "0.1.0",
+  "description": "在 BOSS 直聘职位页提取岗位信息，一键记录到本地小林工具箱（去重 / 存 JD / 生成打招呼文稿）。AI 只起草，发送前请人工确认。",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:8000/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.zhipin.com/*", "https://www.zhipin.com/job_detail/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "小林工具箱 · 海投记录助手",
+    "default_popup": "popup.html"
+  }
+}

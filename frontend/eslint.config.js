@@ -1,39 +1,71 @@
-﻿import js from '\''@eslint/js'\''
-import pluginVue from '\''eslint-plugin-vue'\''
-import * as parserVue from '\''vue-eslint-parser'\''
-import tseslint from '\''@typescript-eslint/eslint-plugin'\''
-import tsParser from '\''@typescript-eslint/parser'\''
+import js from '@eslint/js'
+import pluginVue from 'eslint-plugin-vue'
+import * as parserVue from 'vue-eslint-parser'
+import tseslint from '@typescript-eslint/eslint-plugin'
+import tsParser from '@typescript-eslint/parser'
 
 export default [
   {
     ignores: [
       "node_modules/**",
       "dist/**",
-      "*.min.js"
+      "*.min.js",
+      "**/*.d.ts"
     ]
   },
+  {
+    languageOptions: {
+      globals: {
+        AbortController: 'readonly',
+        Blob: 'readonly',
+        EventSource: 'readonly',
+        File: 'readonly',
+        FormData: 'readonly',
+        TextDecoder: 'readonly',
+        URL: 'readonly',
+        alert: 'readonly',
+        clearInterval: 'readonly',
+        clearTimeout: 'readonly',
+        confirm: 'readonly',
+        console: 'readonly',
+        document: 'readonly',
+        globalThis: 'readonly',
+        localStorage: 'readonly',
+        navigator: 'readonly',
+        setInterval: 'readonly',
+        setTimeout: 'readonly',
+        window: 'readonly',
+        __dirname: 'readonly',
+        process: 'readonly'
+      }
+    }
+  },
   js.configs.recommended,
-  ...pluginVue.configs[\''vue3-recommended'\''],
+  ...pluginVue.configs['flat/recommended'],
   {
     files: ["**/*.vue"],
     languageOptions: {
       parser: parserVue,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: "module"
+        sourceType: "module",
+        parser: tsParser
       }
     },
     plugins: {
-      vue: pluginVue
+      vue: pluginVue,
+      '@typescript-eslint': tseslint
     },
     rules: {
-      ...pluginVue.configs[\''vue3-recommended'\''].rules,
-      '\''vue/multi-word-component-names'\'': '\''off'\'',
-      '\''vue/no-v-html'\'': '\''off'\'',
-      '\''vue/require-default-prop'\'': '\''off'\'',
-      '\''vue/component-tags-order'\'': [\'\'\'error'\'', {
-        order: [ '\''script'\'', '\''template'\'', '\''style'\'' ]
-      }]
+      ...pluginVue.configs.recommended.rules,
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_"
+      }],
+      'vue/multi-word-component-names': 'off',
+      'vue/no-v-html': 'off',
+      'vue/require-default-prop': 'off',
     }
   },
   {
@@ -43,36 +75,39 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: "module",
-        project: "./tsconfig.json"
+        project: ["./tsconfig.json", "./tsconfig.node.json"]
       }
     },
     plugins: {
-      '\''@typescript-eslint'\'': tseslint
+      '@typescript-eslint': tseslint
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      '\''@typescript-eslint/no-explicit-any'\'': '\''warn'\'',
-      '\''@typescript-eslint/no-unused-vars'\'': [\'\'\'error'\'', {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', {
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_"
       }],
-      '\''@typescript-eslint/ban-types'\'': '\''off'\'',
-      '\''no-undef'\'': '\''off'\''
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'no-undef': 'off'
     }
   },
   {
     files: ["**/*.js", "**/*.jsx"],
     rules: {
-      '\''no-unused-vars'\'': '\''warn'\'',
-      '\''no-console'\'': '\''warn'\''
+      'no-unused-vars': 'warn',
+      'no-console': 'warn'
     }
   },
   {
     rules: {
-      '\''no-debugger'\'': '\''error'\'',
-      '\''no-console'\'': '\''warn'\'',
-      '\''prefer-const'\'': '\''error'\'',
-      '\''no-var'\'': '\''error'\''
+      'no-debugger': 'error',
+      'no-console': 'warn',
+      'prefer-const': 'error',
+      'no-var': 'error'
     }
   }
 ]

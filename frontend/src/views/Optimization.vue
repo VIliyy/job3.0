@@ -38,22 +38,25 @@
       </div>
     </div>
 
-    <div v-if="isRunning" class="progress-section">
-      <div class="progress-header">
-        <span class="progress-title">优化进度</span>
-        <span class="progress-percent">{{ Math.round(progress) }}%</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" :style="{ width: progress + '%' }"></div></div>
-      <div class="progress-steps">
-        <div v-for="step in steps" :key="step.id" class="progress-step" :class="'step-' + step.status">
-          <span class="step-icon">{{ stepIcon(step.status) }}</span>
-          <span class="step-label">{{ step.label }}</span>
+    <Transition name="panel" mode="out-in">
+      <div v-if="isRunning" class="progress-section" role="status" aria-live="polite" aria-busy="true" key="progress">
+        <div class="progress-header">
+          <span class="progress-title">优化进度</span>
+          <span class="progress-percent">{{ Math.round(progress) }}%</span>
         </div>
+        <div class="progress-bar"><div class="progress-fill" :style="{ width: progress + '%' }"></div></div>
+        <div class="progress-steps" aria-label="优化处理步骤">
+          <div v-for="step in steps" :key="step.id" class="progress-step" :class="'step-' + step.status">
+            <span class="step-icon">{{ stepIcon(step.status) }}</span>
+            <span class="step-label">{{ step.label }}</span>
+          </div>
+        </div>
+        <div class="progress-time">已用时间: {{ elapsedTime }}秒 · {{ currentStepHint }}</div>
       </div>
-      <div class="progress-time">已用时间: {{ elapsedTime }}秒 · {{ currentStepHint }}</div>
-    </div>
+    </Transition>
 
-    <div v-if="result" class="result-section">
+    <Transition name="panel" mode="out-in">
+      <div v-if="result" class="result-section" aria-live="polite">
       <div class="result-header">
         <h2>优化结果</h2>
         <div class="result-header-actions">
@@ -81,7 +84,7 @@
       <div class="diff-section">
         <h3>变更摘要</h3>
         <p class="change-summary">{{ result.change_summary }}</p>
-        <div v-if="result.diff_highlights?.length" class="diff-list">
+        <div v-if="result.diff_highlights?.length" class="diff-list stagger">
           <div v-for="(diff, i) in result.diff_highlights" :key="i" class="diff-item" :class="diff.type">
             <span class="diff-type-badge">{{ diff.type === 'added' ? '新增' : diff.type === 'removed' ? '删除' : '修改' }}</span>
             <div class="diff-content">{{ diff.content }}</div>
@@ -115,7 +118,8 @@
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -219,7 +223,7 @@ async function startOptimization() {
 
   timer = setInterval(() => { elapsedTime.value++ }, 1000)
   try {
-    const resumeId = Number(selectedResumeId.value)
+    let resumeId = Number(selectedResumeId.value)
     selectedContent.value = resumeText.value
 
     setStepStatus("save", "running")
@@ -356,15 +360,40 @@ onMounted(async () => {
 
 <style scoped>
 .optimization-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   max-width: 1000px;
   margin: 0 auto;
   padding: 24px;
   background: var(--surface-default);
 }
 
+.optimization-page::before {
+  content: "";
+  position: absolute;
+  top: -220px;
+  left: 50%;
+  width: 620px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-info-soft), transparent 68%);
+  transform: translateX(-50%);
+  opacity: 0.58;
+  pointer-events: none;
+  z-index: -1;
+  animation: optimize-atmosphere 14s ease-in-out infinite alternate;
+}
+
+.optimization-page > * {
+  position: relative;
+  z-index: 1;
+}
+
 .page-header {
   text-align: center;
   margin-bottom: 32px;
+  animation: optimize-rise 420ms var(--ease-out-quart) both;
 }
 
 .page-header h1 {
@@ -380,11 +409,26 @@ onMounted(async () => {
 }
 
 .input-section {
+  position: relative;
+  overflow: hidden;
   background: var(--surface-elevated);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
   border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-level-1);
+  animation: optimize-rise 520ms var(--ease-out-quart) both;
+}
+
+.input-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(var(--color-action-blue), var(--agent-advisor));
+  opacity: 0.8;
 }
 
 .input-group {
@@ -406,6 +450,13 @@ onMounted(async () => {
   font-size: 14px;
   background: var(--surface-input);
   color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.input-select:focus {
+  outline: none;
+  border-color: var(--color-action-blue);
+  box-shadow: 0 0 0 3px var(--color-info-soft);
 }
 
 .input-hint {
@@ -428,10 +479,13 @@ onMounted(async () => {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .btn-primary:hover {
   background: var(--color-focus-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-level-2);
 }
 
 .btn-primary:disabled {
@@ -447,14 +501,39 @@ onMounted(async () => {
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-action-blue);
+  transform: translateY(-1px);
 }
 
 .progress-section {
+  position: relative;
+  overflow: hidden;
   background: var(--surface-elevated);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
   border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-level-2);
+  animation: optimize-rise 380ms var(--ease-out-quart) both;
+}
+
+.progress-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.25) 48%, transparent 72%);
+  transform: translateX(-110%);
+  animation: optimize-sheen 5s var(--ease-in-out-quart) infinite;
+  pointer-events: none;
+}
+
+.progress-section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .progress-header {
@@ -483,8 +562,10 @@ onMounted(async () => {
 
 .progress-fill {
   height: 100%;
-  background: var(--color-action-blue);
-  transition: width 0.3s;
+  background: linear-gradient(90deg, var(--color-action-blue), var(--color-focus-blue), var(--agent-advisor));
+  background-size: 180% 100%;
+  transition: width var(--transition-normal);
+  animation: progress-shimmer 2s linear infinite;
 }
 
 .progress-steps {
@@ -495,6 +576,7 @@ onMounted(async () => {
 }
 
 .progress-step {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -503,16 +585,20 @@ onMounted(async () => {
   font-size: 13px;
   background: var(--surface-stone);
   color: var(--text-muted);
+  transition: transform var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .step-running {
   background: rgba(59, 130, 246, 0.1);
   color: var(--color-action-blue);
+  box-shadow: 0 0 0 3px var(--color-info-soft);
+  animation: step-pulse 2s ease-in-out infinite;
 }
 
 .step-complete {
   background: rgba(16, 185, 129, 0.1);
   color: var(--color-success);
+  animation: step-complete 380ms var(--ease-spring) both;
 }
 
 .step-error {
@@ -526,10 +612,14 @@ onMounted(async () => {
 }
 
 .result-section {
+  position: relative;
+  overflow: hidden;
   background: var(--surface-elevated);
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-level-2);
+  animation: optimize-result 520ms var(--ease-out-quart) both;
 }
 
 .result-header {
@@ -584,6 +674,8 @@ onMounted(async () => {
   justify-content: center;
   margin: 0 auto 12px;
   position: relative;
+  animation: score-reveal 820ms var(--ease-spring) both;
+  filter: drop-shadow(0 8px 18px rgba(24, 99, 220, 0.16));
 }
 
 .score-circle::before {
@@ -677,6 +769,12 @@ onMounted(async () => {
   border-radius: 8px;
   background: var(--surface-default);
   border-left: 4px solid var(--border-default);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.diff-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-level-1);
 }
 
 .diff-item.added {
@@ -746,6 +844,13 @@ onMounted(async () => {
   background: var(--color-action-blue);
   color: white;
   border: none;
+  transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btn-action:hover {
+  background: var(--color-focus-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-level-2);
 }
 
 .versions-card h3 {
@@ -846,6 +951,73 @@ onMounted(async () => {
   max-height: 260px;
   overflow-y: auto;
   color: var(--text-primary);
+}
+
+.panel-enter-active,
+.panel-leave-active {
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.panel-enter-from,
+.panel-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes optimize-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes optimize-result {
+  from { opacity: 0; transform: translateY(16px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes optimize-atmosphere {
+  from { transform: translateX(-50%) translateY(0) scale(0.96); }
+  to { transform: translateX(-50%) translateY(18px) scale(1.04); }
+}
+
+@keyframes optimize-sheen {
+  0%, 55% { transform: translateX(-110%); }
+  75%, 100% { transform: translateX(110%); }
+}
+
+@keyframes progress-shimmer {
+  to { background-position: -180% 0; }
+}
+
+@keyframes step-pulse {
+  50% { transform: translateY(-1px); }
+}
+
+@keyframes step-complete {
+  from { opacity: 0.5; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes score-reveal {
+  from { opacity: 0; transform: scale(0.72) rotate(-12deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .optimization-page::before,
+  .page-header,
+  .input-section,
+  .progress-section,
+  .progress-section::after,
+  .progress-fill,
+  .step-running,
+  .step-complete,
+  .result-section,
+  .score-circle,
+  .panel-enter-active,
+  .panel-leave-active {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* Textarea 样式 */

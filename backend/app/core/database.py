@@ -2,10 +2,13 @@
 # 小林工具箱 - 数据库配置
 # 支持SQLite（本地）和MySQL（可选）
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import logging
+
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import declarative_base, sessionmaker
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # 创建引擎
 if settings.DATABASE_URL.startswith("sqlite"):
@@ -14,6 +17,11 @@ if settings.DATABASE_URL.startswith("sqlite"):
         connect_args={"check_same_thread": False},
         echo=settings.DEBUG
     )
+    @event.listens_for(engine, "connect")
+    def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
     print("[OK] 数据库: SQLite (本地存储)")
 else:
     engine = create_engine(
@@ -42,9 +50,29 @@ def init_db():
         greeting,
         jd,
         video_task,
+        decompose_task,
+        agent_chat,
+        job_snapshot,
     )
 
     Base.metadata.create_all(bind=engine)
+
+    if settings.DATABASE_URL.startswith("sqlite"):
+        with engine.begin() as conn:
+            duplicates = conn.exec_driver_sql(
+                "SELECT job_url, COUNT(*) FROM applications "
+                "WHERE job_url IS NOT NULL GROUP BY job_url HAVING COUNT(*) > 1"
+            ).fetchall()
+            if duplicates:
+                logger.error(
+                    "skipping job_url unique index because duplicate data exists: %s",
+                    len(duplicates),
+                )
+            else:
+                conn.exec_driver_sql(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_app_job_url "
+                    "ON applications (job_url) WHERE job_url IS NOT NULL"
+                )
 
     # 轻量迁移：ResumeVersion.original_content（幂等，SQLite 专用）
     if settings.DATABASE_URL.startswith("sqlite"):

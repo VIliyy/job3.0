@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 340px; font-family: "Microsoft YaHei", system-ui, sans-serif; color: #222; background: #f7f8fa; }
+    .head { background: #07c160; color: #fff; padding: 12px 14px; font-size: 14px; font-weight: 600; }
+    .head small { display: block; font-weight: 400; font-size: 11px; opacity: .85; margin-top: 2px; }
+    .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .status { border-radius: 8px; padding: 8px 10px; font-size: 12px; background: #fff; border: 1px solid #eee; }
+    .status.ok { border-color: #cfe9da; background: #f0faf4; color: #0a7a3d; }
+    .status.err { border-color: #f5c6c0; background: #fdf0ee; color: #b42318; }
+    .field label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+    .field input { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px; padding: 7px 9px; font-size: 13px; outline: none; }
+    .field input:focus { border-color: #07c160; }
+    .field .hint { font-size: 11px; color: #aaa; margin-top: 4px; line-height: 1.5; }
+    .btns { display: flex; gap: 8px; }
+    .btn { flex: 1; border: none; border-radius: 8px; padding: 8px 0; font-size: 13px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
+    .btn.primary { background: #07c160; color: #fff; font-weight: 600; }
+    .btn.ghost { background: #fff; color: #555; border: 1px solid #e0e0e0; }
+    .foot { font-size: 11px; color: #aaa; text-align: center; padding: 0 14px 12px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="head">📦 小林工具箱 · BOSS 海投记录助手
+    <small>AI 只起草打招呼语，发送动作始终由你人工完成</small>
+  </div>
+  <div class="body">
+    <div class="status" id="status">正在检测本地服务…</div>
+    <div class="field">
+      <label>本地服务 Token（X-Bridge-Token）</label>
+      <input id="token" placeholder="与后端 BRIDGE_TOKEN 一致" spellcheck="false">
+      <div class="hint">默认 <b>job3-bridge-local-2026</b>。若后端 .env 修改了 BRIDGE_TOKEN，请在这里同步。</div>
+    </div>
+    <div class="btns">
+      <button class="btn primary" id="save">保存 Token</button>
+      <button class="btn ghost" id="check">重新检测</button>
+    </div>
+    <div class="btns">
+      <a class="btn ghost" id="open-boss" href="https://www.zhipin.com/" target="_blank">打开 BOSS 直聘</a>
+      <a class="btn ghost" id="open-toolbox" href="http://localhost:5173/" target="_blank">打开工具箱</a>
+    </div>
+  </div>
+  <div class="foot" id="save-msg"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

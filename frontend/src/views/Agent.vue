@@ -9,15 +9,22 @@
         <span>{{ aiEnabled ? '[OK] AI 已启用' : '[X] AI 未配置' }}</span>
         <a v-if="!aiEnabled" href="/settings" class="status-link">去配置</a>
       </div>
-      <div class="api-model" v-if="aiEnabled && aiModel">
-        <span>{{ aiModel }}</span>
+      <div class="status-actions">
+        <div class="api-model" v-if="aiEnabled && aiModel">
+          <span>{{ aiModel }}</span>
+        </div>
+        <button v-if="messages.length > 0" class="clear-history-btn" @click="clearHistory">清空历史</button>
       </div>
     </div>
 
     <div class="chat-area" ref="chatArea">
       <div class="messages">
         <div v-if="messages.length === 0" class="welcome">
-          <div class="welcome-icon">AI</div>
+          <div class="welcome-orbit" aria-hidden="true">
+            <span class="orbit-dot orbit-dot-one"></span>
+            <span class="orbit-dot orbit-dot-two"></span>
+            <div class="welcome-icon">AI</div>
+          </div>
           <h2>求职助手</h2>
           <p class="welcome-desc">我可以帮你分析 JD、匹配岗位、优化简历、生成打招呼语</p>
           <div class="example-list">
@@ -68,7 +75,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue"
-import { agentApi, resumeApi, aiStatusApi } from "@/api"
+import { agentApi, agentHistoryApi, resumeApi, aiStatusApi } from "@/api"
 import { toast } from "@/composables/useToast"
 
 const messages = ref([])
@@ -76,6 +83,7 @@ const inputMessage = ref("")
 const isTyping = ref(false)
 const typingHint = ref("正在思考…")
 const chatArea = ref(null)
+const chatId = ref(null)
 
 const hasResume = ref(false)
 const aiEnabled = ref(false)
@@ -109,6 +117,51 @@ async function loadStatus() {
   }
 }
 
+async function loadHistory() {
+  try {
+    const list = await agentHistoryApi.list()
+    if (Array.isArray(list) && list.length > 0) {
+      const detail = await agentHistoryApi.get(list[0].chat_id)
+      chatId.value = detail.chat_id
+      messages.value = detail.messages || []
+    }
+  } catch (e) {
+    console.error("加载聊天历史失败:", e)
+  }
+}
+
+async function persistChat() {
+  try {
+    const firstUser = messages.value.find((m) => m.role === "user")
+    const saved = await agentHistoryApi.save({
+      chat_id: chatId.value || undefined,
+      title: firstUser ? firstUser.content.slice(0, 30) : undefined,
+      messages: messages.value.map((m) => ({
+        role: m.role,
+        content: m.content,
+        time: m.time || "",
+        actions: m.actions || []
+      }))
+    })
+    if (saved && saved.chat_id) chatId.value = saved.chat_id
+  } catch (e) {
+    console.error("保存聊天历史失败:", e)
+    toast.error("聊天历史保存失败: " + (e.message || e))
+  }
+}
+
+async function clearHistory() {
+  if (!window.confirm("确定清空全部聊天历史？删除后不可恢复。")) return
+  try {
+    await agentHistoryApi.clear()
+    messages.value = []
+    chatId.value = null
+    toast.success("聊天历史已清空")
+  } catch (e) {
+    toast.error("清空失败: " + (e.message || e))
+  }
+}
+
 const sendExample = (type) => {
   const text = EXAMPLES[type]
   if (text) {
@@ -136,6 +189,7 @@ const sendMessage = async () => {
   inputMessage.value = ""
   messages.value.push({ role: "user", content: msg, time: new Date().toLocaleTimeString() })
   scrollToBottom()
+  await persistChat()
 
   const botMsg = { role: "bot", content: "", time: "", actions: [] }
   messages.value.push(botMsg)
@@ -170,6 +224,7 @@ const sendMessage = async () => {
     botMsg.time = new Date().toLocaleTimeString()
     isTyping.value = false
     scrollToBottom()
+    persistChat()
   }
 }
 
@@ -224,20 +279,36 @@ async function streamChat(msg, history, botMsg, state) {
 
 onMounted(async () => {
   await loadStatus()
-  const saved = localStorage.getItem("agent_messages")
-  if (saved) {
-    try { messages.value = JSON.parse(saved) } catch {}
-  }
+  await loadHistory()
 })
 </script>
 
 <style scoped>
 .agent-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: var(--surface-default);
   display: flex;
   flex-direction: column;
   height: calc(100vh - 60px);
   background: var(--surface-default);
+}
+
+.agent-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.agent-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .status-bar {
@@ -248,6 +319,8 @@ onMounted(async () => {
   border-bottom: 1px solid var(--border-default);
   font-size: 13px;
   align-items: center;
+  box-shadow: 0 1px 0 var(--border-subtle);
+  animation: agent-slide-down 420ms var(--ease-out-quart) both;
 }
 
 .resume-status, .api-status, .api-model {
@@ -258,10 +331,44 @@ onMounted(async () => {
   color: var(--color-success);
 }
 
-.api-model {
+.resume-status.active::before,
+.api-status.active::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: status-pulse 2.4s ease-out infinite;
+}
+
+.status-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.api-model {
   color: var(--text-subtle);
   font-size: 12px;
+}
+
+.clear-history-btn {
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.clear-history-btn:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .status-link {
@@ -285,12 +392,22 @@ onMounted(async () => {
 .welcome {
   text-align: center;
   padding: 60px 20px;
+  animation: agent-rise 520ms var(--ease-out-quart) both;
+}
+
+.welcome-orbit {
+  position: relative;
+  width: 120px;
+  height: 104px;
+  margin: 0 auto 16px;
 }
 
 .welcome-icon {
   width: 72px;
   height: 72px;
-  margin: 0 auto 16px;
+  position: absolute;
+  inset: 16px 24px;
+  margin: 0;
   border-radius: 20px;
   background: linear-gradient(135deg, var(--color-action-blue), var(--color-focus-blue));
   color: white;
@@ -299,7 +416,41 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 10px 36px rgba(24, 99, 220, 0.2);
+  animation: core-breathe 3.2s ease-in-out infinite;
+  z-index: 1;
 }
+
+.welcome-orbit::before,
+.welcome-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 2px 10px;
+  border: 1px solid var(--color-info-soft);
+  border-radius: 50%;
+  transform: rotate(24deg);
+  animation: orbit-spin 12s linear infinite;
+}
+
+.welcome-orbit::after {
+  inset: 8px 2px;
+  transform: rotate(-32deg);
+  animation-duration: 16s;
+  animation-direction: reverse;
+}
+
+.orbit-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  box-shadow: 0 0 12px currentColor;
+  z-index: 2;
+}
+
+.orbit-dot-one { top: 10px; right: 18px; color: var(--color-coral); }
+.orbit-dot-two { bottom: 8px; left: 12px; color: var(--agent-advisor); background: currentColor; }
 
 .welcome h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
 .welcome-desc { color: var(--text-muted); margin-bottom: 28px; }
@@ -320,17 +471,22 @@ onMounted(async () => {
   border-radius: 12px;
   cursor: pointer;
   font-size: 14px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .example-btn:hover {
   background: var(--color-action-blue);
   color: white;
+  border-color: var(--color-action-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-level-2);
 }
 
 .message {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+  animation: agent-rise 360ms var(--ease-out-quart) both;
 }
 
 .message.user {
@@ -367,6 +523,7 @@ onMounted(async () => {
   font-size: 14px;
   white-space: pre-wrap;
   word-break: break-word;
+  box-shadow: var(--shadow-level-1);
 }
 
 .message.user .message-text {
@@ -452,6 +609,7 @@ onMounted(async () => {
 .message-input:focus {
   outline: none;
   border-color: var(--color-action-blue);
+  box-shadow: 0 0 0 3px var(--color-info-soft), 0 8px 24px rgba(24, 99, 220, 0.08);
 }
 
 .send-btn {
@@ -462,11 +620,56 @@ onMounted(async () => {
   border-radius: 12px;
   font-size: 14px;
   cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.send-btn:not(:disabled):hover {
+  background: var(--color-focus-blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-level-2);
 }
 
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@keyframes agent-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes agent-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes core-breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 10px 36px rgba(24, 99, 220, 0.2); }
+  50% { transform: scale(1.04); box-shadow: 0 12px 44px rgba(24, 99, 220, 0.32); }
+}
+
+@keyframes orbit-spin {
+  to { transform: rotate(384deg); }
+}
+
+@keyframes status-pulse {
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-page::before,
+  .status-bar,
+  .welcome,
+  .welcome-icon,
+  .welcome-orbit::before,
+  .welcome-orbit::after,
+  .resume-status.active::before,
+  .api-status.active::before,
+  .message {
+    animation: none;
+  }
 }
 
 

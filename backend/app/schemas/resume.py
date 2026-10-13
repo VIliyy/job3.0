@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # Job3.0 求职系统 - 简历 Schema（v2.0）
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -23,29 +23,30 @@ class ResumeStatus(str):
 
 
 class ResumeBase(BaseModel):
-    filename: str
-    content: Optional[str] = None
-    category: Optional[str] = "other"
-    version_name: Optional[str] = None
+    filename: str = Field(..., min_length=1, max_length=255)
+    content: Optional[str] = Field(None, max_length=100_000)
+    category: Optional[str] = Field("other", max_length=32)
+    version_name: Optional[str] = Field(None, max_length=255)
 
 
 class ResumeCreate(ResumeBase):
     slot: int = Field(..., ge=1, le=4)
-    filepath: str
-    file_size: Optional[int] = 0
-    file_type: Optional[str] = None
+    filepath: str = Field(..., max_length=1024)
+    file_size: Optional[int] = Field(0, ge=0)
+    file_type: Optional[str] = Field(None, max_length=32)
 
 
 class ResumeUpdate(BaseModel):
-    category: Optional[str] = None
-    status: Optional[str] = None
-    version_name: Optional[str] = None
+    category: Optional[str] = Field(None, max_length=32)
+    status: Optional[str] = Field(None, max_length=32)
+    version_name: Optional[str] = Field(None, max_length=255)
     current_jd_id: Optional[int] = None
     latest_optimized_version_id: Optional[int] = None
-    content: Optional[str] = None
+    content: Optional[str] = Field(None, max_length=100_000)
 
 
 class ResumeResponse(ResumeBase):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     slot: int
     is_active: bool
@@ -58,11 +59,8 @@ class ResumeResponse(ResumeBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
-
 class ResumeBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     slot: int
     filename: str
@@ -78,11 +76,8 @@ class ResumeBrief(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
-
 class ResumeVersionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     resume_id: int
     version_number: int
@@ -96,16 +91,10 @@ class ResumeVersionResponse(BaseModel):
     diff_highlights: Optional[str] = None
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
-
 class ResumeWithVersions(ResumeResponse):
-    versions: List[ResumeVersionResponse] = []
+    model_config = ConfigDict(from_attributes=True)
+    versions: List[ResumeVersionResponse] = Field(default_factory=list)
     application_count: int = 0
-
-    class Config:
-        from_attributes = True
 
 
 class ResumeListResponse(BaseModel):

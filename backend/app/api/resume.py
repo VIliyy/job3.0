@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.models.resume import Resume, ResumeVersion, ResumeCategory, ResumeStatus
 from app.schemas.resume import ResumeResponse, ResumeCreate, ResumeUpdate, ResumeBrief, ResumeWithVersions, ResumeVersionResponse
 from app.services.resume_service import ResumeService
+from app.core.utils import resolve_within_directory, sanitize_filename, save_upload_file
 
 router = APIRouter(prefix="/resumes", tags=["简历管理 v2.0"])
 
@@ -74,7 +75,7 @@ async def create_resume(resume_data: ResumeCreate, db: Session = Depends(get_db)
 
 
 @router.get("/", response_model=List[ResumeBrief])
-def list_resumes(category: Optional[str] = None, status: Optional[str] = None, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+def list_resumes(category: Optional[str] = None, status: Optional[str] = None, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
     query = db.query(Resume)
     if category:
         query = query.filter(Resume.category == normalize_category(category))
@@ -111,12 +112,15 @@ def update_resume(resume_id: int, update_data: ResumeUpdate, db: Session = Depen
 
 @router.delete("/{resume_id}")
 def delete_resume(resume_id: int, db: Session = Depends(get_db)):
-    import os
     resume = db.query(Resume).filter(Resume.id == resume_id).first()
     if not resume:
         raise HTTPException(status_code=404, detail="简历不存在")
-    if os.path.exists(resume.filepath):
-        os.remove(resume.filepath)
+    try:
+        stored_path = resolve_within_directory(resume.filepath, settings.UPLOAD_DIR)
+    except ValueError:
+        stored_path = None
+    if stored_path and stored_path.is_file():
+        stored_path.unlink()
     db.delete(resume)
     db.commit()
     return {"message": "删除成功"}
@@ -154,6 +158,7 @@ def create_resume_version(resume_id: int, version_data: dict, db: Session = Depe
     )
     
     db.add(version)
+    db.flush()
     resume.status = ResumeStatus.OPTIMIZED
     resume.latest_optimized_version_id = version.id
     resume.content = version.content
@@ -165,27 +170,24 @@ def create_resume_version(resume_id: int, version_data: dict, db: Session = Depe
 
 @router.post("/upload", response_model=ResumeResponse)
 async def upload_resume(file: UploadFile = File(...), slot: int = Query(1, ge=1, le=4), category: str = "other", version_name: Optional[str] = None, db: Session = Depends(get_db)):
-    if file.filename:
-        ext = file.filename.split(".")[-1].lower()
-        if ext not in settings.ALLOWED_EXTENSIONS:
-            raise HTTPException(status_code=400, detail=f"不支持的文件格式")
-    
-    content = await file.read()
-    if len(content) > settings.MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="文件大小不能超过10MB")
-    
+    original_name = sanitize_filename(file.filename or "resume")
+    ext = os.path.splitext(original_name)[1].lower().lstrip(".")
+    if ext not in {"pdf", "doc", "docx"}:
+        raise HTTPException(status_code=400, detail="简历仅支持 PDF、DOC、DOCX 文件")
+
     filename = f"resume_{slot}_{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(settings.UPLOAD_DIR, filename)
-    
-    with open(filepath, "wb") as f:
-        f.write(content)
-    
+    try:
+        file_size = await save_upload_file(file, filepath, settings.MAX_FILE_SIZE)
+    except ValueError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
+
     service = ResumeService(db)
     content_text = await service.parse_resume(filepath, ext)
     
     resume = await service.save_resume_v2(
         slot=slot, filename=file.filename or filename, filepath=filepath,
-        content=content_text, file_type=ext, file_size=len(content),
+        content=content_text, file_type=ext, file_size=file_size,
         category=normalize_category(category), version_name=version_name
     )
     return resume
@@ -193,9 +195,9 @@ async def upload_resume(file: UploadFile = File(...), slot: int = Query(1, ge=1,
 
 class SaveTextRequest(BaseModel):
     slot: int = Field(1, ge=1, le=4)
-    content: str
-    category: str = "other"
-    version_name: Optional[str] = None
+    content: str = Field(..., max_length=settings.MAX_TEXT_LENGTH)
+    category: str = Field("other", max_length=32)
+    version_name: Optional[str] = Field(None, max_length=255)
 
 
 @router.post("/save-text", response_model=ResumeResponse)

@@ -21,15 +21,15 @@ class AgentRole(str, Enum):
 
 class ChatMessage(BaseModel):
     """聊天消息"""
-    role: str = Field(..., description="角色: user/assistant/system")
-    content: str = Field(..., description="消息内容")
+    role: str = Field(..., min_length=1, max_length=32, description="角色: user/assistant/system")
+    content: str = Field(..., min_length=1, max_length=100_000, description="消息内容")
     timestamp: Optional[datetime] = None
 
 
 class ChatRequest(BaseModel):
     """聊天请求"""
-    message: str = Field(..., min_length=1, description="用户消息")
-    history: Optional[List[ChatMessage]] = Field(default_factory=list, description="历史消息")
+    message: str = Field(..., min_length=1, max_length=100_000, description="用户消息")
+    history: Optional[List[ChatMessage]] = Field(default_factory=list, max_length=100, description="历史消息")
     state: Optional[Dict[str, Any]] = Field(default=None, description="对话状态")
 
 
@@ -43,8 +43,8 @@ class ChatResponse(BaseModel):
 
 class StreamRequest(BaseModel):
     """流式请求"""
-    message: str = Field(..., min_length=1)
-    history: Optional[List[ChatMessage]] = Field(default_factory=list)
+    message: str = Field(..., min_length=1, max_length=100_000)
+    history: Optional[List[ChatMessage]] = Field(default_factory=list, max_length=100)
     state: Optional[Dict[str, Any]] = None
     stream_thinking: bool = Field(default=False, description="是否流式输出思考过程")
 

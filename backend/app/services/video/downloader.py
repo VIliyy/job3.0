@@ -9,8 +9,6 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-import yt_dlp
-
 logger = logging.getLogger(__name__)
 
 SUPPORTED_PLATFORMS = {"bilibili", "douyin", "local"}
@@ -80,6 +78,11 @@ class VideoDownloader:
 
     # ---------- 网络视频 ----------
     def _download_network(self, url: str, platform: str) -> DownloadResult:
+        try:
+            import yt_dlp
+        except ImportError as exc:
+            raise RuntimeError("视频下载功能需要安装 yt-dlp") from exc
+
         ydl_opts = {
             "format": "bestaudio/best",
             "outtmpl": os.path.join(self.output_dir, "%(id)s.%(ext)s"),

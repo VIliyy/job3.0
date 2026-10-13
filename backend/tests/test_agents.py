@@ -102,6 +102,51 @@ def test_parse_json_response_invalid():
     result = parse_json_response(invalid_json)
     assert "raw" in result
 
+
+def test_agent_nodes_produce_evidence_based_outputs():
+    from app.agents.langgraph_agent import (
+        analyzer_node,
+        critic_node,
+        planner_node,
+        recruiter_node,
+        writer_node,
+    )
+
+    state = {
+        "resume_text": SAMPLE_RESUME,
+        "jd_text": SAMPLE_JD,
+        "original_resume": SAMPLE_RESUME,
+        "iteration": 0,
+        "max_iterations": 5,
+    }
+
+    state = analyzer_node(state)
+    state = planner_node(state)
+    state = recruiter_node(state)
+    state = writer_node(state)
+    state = critic_node(state)
+
+    tasks = state["planner_output"]["tasks"]
+    recruiter = state["recruiter_output"]
+    critic = state["critic_output"]
+
+    assert tasks
+    assert all("??" not in str(task) for task in tasks)
+    assert any(task["requirement"] in {"数据库", "微服务", "Redis", "MongoDB"} for task in tasks)
+    assert "Python" in recruiter["matched_keywords"]
+    assert recruiter["missing_keywords"]
+    assert critic["missing_keywords"] == recruiter["missing_keywords"]
+    assert critic["issues"]
+
+
+def test_extracts_chinese_requirements():
+    from app.agents.langgraph_agent import _extract_keywords
+
+    keywords = _extract_keywords("熟悉微服务架构，有数据库设计经验")
+
+    assert "微服务" in keywords
+    assert "数据库" in keywords
+
 # =============================================================================
 # 测试收敛判断
 # =============================================================================
@@ -138,9 +183,66 @@ async def test_create_initial_state():
     assert state["resume_text"] == SAMPLE_RESUME
     assert state["jd_text"] == SAMPLE_JD
     assert state["slot"] == 1
-    assert state["iteration"] == 0
+    assert state["iteration"] >= 1
     assert state["status"] == "completed"
     assert state["match_score"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_run_optimization_accepts_stream_options_and_emits_events():
+    from app.agents.langgraph_agent import run_optimization
+
+    class Callback:
+        def __init__(self):
+            self.events = []
+
+        async def on_agent_event(self, event):
+            self.events.append(event)
+
+    callback = Callback()
+    state = await run_optimization(
+        resume_text=SAMPLE_RESUME,
+        jd_text=SAMPLE_JD,
+        slot=1,
+        enable_stream=True,
+        callbacks=[callback],
+    )
+
+    assert state["status"] == "completed"
+    assert callback.events
+    assert {event["agent"] for event in callback.events} >= {
+        "analyzer",
+        "planner",
+        "recruiter",
+        "writer",
+        "critic",
+    }
+
+
+def test_orchestration_optimize_endpoint_accepts_agent_stream_contract(client):
+    response = client.post(
+        "/api/orchestration/optimize",
+        json={"resume_text": SAMPLE_RESUME, "jd_text": SAMPLE_JD, "stream": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
+    assert response.json()["all_outputs"]["writer"]["mode"] == "suggestions_only"
+    assert response.json()["all_outputs"]["critic"]["missing_keywords"]
+
+
+def test_orchestration_stream_flushes_agent_events_as_json(client):
+    with client.stream(
+        "POST",
+        "/api/orchestration/optimize-stream",
+        json={"resume_text": SAMPLE_RESUME, "jd_text": SAMPLE_JD, "stream": True},
+    ) as response:
+        body = "".join(response.iter_text())
+
+    assert response.status_code == 200
+    assert "event: agent" in body
+    assert "event: final" in body
+    assert '"status": "completed"' in body
 
 # =============================================================================
 # 测试状态机构建
